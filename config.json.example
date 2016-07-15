@@ -1,0 +1,13 @@
+{
+    "TOKEN": "",
+    "COMMAND_PREFIX": "!",
+    "DESCRIPTION": "",
+    "LOGGING": {
+        "LEVEL": {
+            "ALL": 10,
+            "CONSOLE": 10,
+            "FILE": 30
+        },
+        "FILE": "log.txt"
+    }
+}

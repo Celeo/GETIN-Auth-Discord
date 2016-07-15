@@ -1,0 +1,6 @@
+*.pyc
+__pycache__
+*.db
+config.json
+log.txt
+env
