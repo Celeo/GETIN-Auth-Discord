@@ -25,7 +25,7 @@ logger.addHandler(handler)
 
 # bot
 logger.info('Creating bot object ...')
-bot = commands.Bot(command_prefix=config['COMMAND_PREFIX'], description=config['BOT_DESCRIPTION'])
+bot = commands.Bot(command_prefix=config['COMMAND_PREFIX'], description=config['DESCRIPTION'])
 logger.info('Setup complete')
 
 
@@ -52,7 +52,7 @@ async def command_test():
 if __name__ == '__main__':
     try:
         logger.info('Starting run loop ...')
-        bot.loop.run_until_complete(bot.start(config['BOT_TOKEN']))
+        bot.loop.run_until_complete(bot.start(config['TOKEN']))
     except KeyboardInterrupt:
         logger.warning('Logging out ...')
         bot.loop.run_until_complete(bot.logout())
