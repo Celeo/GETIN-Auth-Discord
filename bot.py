@@ -2,6 +2,7 @@
 import json
 import logging
 import sys
+import asyncio
 
 from discord.ext import commands
 
@@ -114,9 +115,41 @@ async def command_sync(context):
     await bot.say('Command not implemented')
 
 
+async def check_new_members():
+    while True:
+        logger.info('Checking for new members ...')
+        await asyncio.sleep(5)
+        # TODO
+        logger.info('No new members')
+        await asyncio.sleep(3600)
+
+
+async def check_members_left():
+    while True:
+        logger.info('Checking for members who left ...')
+        await asyncio.sleep(5)
+        # TODO
+        logger.info('No members left')
+        await asyncio.sleep(3600)
+
+
+async def check_invalid_keys():
+    while True:
+        logger.info('Checking for invalid keys ...')
+        await asyncio.sleep(5)
+        # TODO
+        logger.info('No invalid keys')
+        await asyncio.sleep(3600)
+
+
 if __name__ == '__main__':
     try:
         logger.info('Starting run loop ...')
+        asyncio.ensure_future(asyncio.wait((
+            asyncio.ensure_future(check_new_members()),
+            asyncio.ensure_future(check_members_left()),
+            asyncio.ensure_future(check_invalid_keys())
+        )))
         bot.loop.run_until_complete(bot.start(config['TOKEN']))
     except KeyboardInterrupt:
         logger.warning('Logging out ...')
