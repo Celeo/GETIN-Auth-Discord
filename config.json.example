@@ -6,8 +6,9 @@
         "LEVEL": {
             "ALL": 10,
             "CONSOLE": 10,
-            "FILE": 30
+            "FILE": 20
         },
         "FILE": "log.txt"
-    }
+    },
+    "PRIVATE_COMMAND_CHANNEL": "recruitment"
 }

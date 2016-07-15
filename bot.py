@@ -20,7 +20,7 @@ handler.setLevel(config['LOGGING']['LEVEL']['CONSOLE'])
 logger.addHandler(handler)
 handler = logging.FileHandler(config['LOGGING']['FILE'])
 handler.setFormatter(formatter)
-handler.setLevel(config['LOGGING']['LEVEL']['CONSOLE'])
+handler.setLevel(config['LOGGING']['LEVEL']['FILE'])
 logger.addHandler(handler)
 
 # bot
@@ -32,21 +32,86 @@ logger.info('Setup complete')
 @bot.event
 async def on_message(message):
     """
-    TODO
+    Logs attempes to use the bot.
+
+    Args:
+        message (discord.Message) - message sent in the channel
+
+    Returns:
+        None
     """
-    await bot.process_commands(message)
     if message.content.startswith(config['COMMAND_PREFIX']):
-        logger.debug('Command "{}" from "{}"'.format(message.content, message.author.name))
+        logger.debug('Command "{}" from "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
     if 'bot' in message.content.lower():
-        logger.debug('Bot in message: "{}" by "{}"'.format(message.content, message.author.name))
+        logger.debug('Bot in message: "{}" by "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
+    await bot.process_commands(message)
 
 
-@bot.command(name='test', help='test')
-async def command_test():
+@bot.command(
+    name='author',
+    aliases=['source'],
+    brief='Get bot source',
+    help='Returns the author and source code repository URL of this bot'
+)
+async def command_source():
     """
     TODO
     """
-    await bot.say('test')
+    await bot.say('Celeodor (EVE: Celeo Servasse), https://git.celeodor.com/Celeo/GETIN-HR-Discord')
+
+
+@bot.command(
+    name='schedule',
+    brief='Show update schedule',
+    help='Shows the schedule by which the bot accesses the web app to update member data',
+    pass_context=True
+)
+async def command_schedule(context):
+    """
+    TODO
+    """
+    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']:
+        await bot.say('This command cannot be used from this channel')
+        logger.info('"{}" used command "schedule" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
+        return
+    await bot.say('Command not implemented')
+
+
+@bot.command(
+    name='check',
+    brief='Check a member\'s status',
+    help='Checks the status of a member in the corporation or an applicant in the web app',
+    pass_context=True
+)
+async def command_check(context, target: str=None):
+    """
+    TODO
+    """
+    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']:
+        await bot.say('This command cannot be used from this channel')
+        logger.info('"{}" used command "check" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
+        return
+    if not target:
+        await bot.say('{} check [name]'.format(config['COMMAND_PREFIX']))
+        return
+    await bot.say('Command not implemented')
+
+
+@bot.command(
+    name='sync',
+    brief='Member sync',
+    help='Calls the web app to sync membership information',
+    pass_context=True
+)
+async def command_sync(context):
+    """
+    TODO
+    """
+    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']:
+        await bot.say('This command cannot be used from this channel')
+        logger.info('"{}" used command "sync" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
+        return
+    await bot.say('Command not implemented')
 
 
 if __name__ == '__main__':
