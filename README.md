@@ -4,6 +4,8 @@ This is a Discord bot that hooks into the GETIN-HR web application to run checks
 
 ## Installing
 
+Note: due to the async nature of Discord.py, this project requires Python 3.5.
+
 Download from my Git server, install the Python prerequisites, and copy and edit the configuration:
 
 ```bash
