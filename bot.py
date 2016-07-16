@@ -4,7 +4,9 @@ import logging
 import sys
 import asyncio
 
+import discord
 from discord.ext import commands
+import requests
 
 
 # config
@@ -27,6 +29,7 @@ logger.addHandler(handler)
 # bot
 logger.info('Creating bot object ...')
 bot = commands.Bot(command_prefix=config['COMMAND_PREFIX'], description=config['DESCRIPTION'])
+logger.info('Getting private channel reference ...')
 logger.info('Setup complete')
 
 
@@ -41,10 +44,12 @@ async def on_message(message):
     Returns:
         None
     """
+    if message.author == bot.user:
+        return
     if message.content.startswith(config['COMMAND_PREFIX']):
-        logger.debug('Command "{}" from "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
+        logger.info('Command "{}" from "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
     if 'bot' in message.content.lower():
-        logger.debug('Bot in message: "{}" by "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
+        logger.info('Bot in message: "{}" by "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
     await bot.process_commands(message)
 
 
@@ -71,7 +76,7 @@ async def command_schedule(context):
     """
     TODO
     """
-    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']:
+    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
         await bot.say('This command cannot be used from this channel')
         logger.info('"{}" used command "schedule" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
         return
@@ -88,7 +93,7 @@ async def command_check(context, target: str=None):
     """
     TODO
     """
-    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']:
+    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
         await bot.say('This command cannot be used from this channel')
         logger.info('"{}" used command "check" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
         return
@@ -108,48 +113,81 @@ async def command_sync(context):
     """
     TODO
     """
-    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']:
+    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
         await bot.say('This command cannot be used from this channel')
         logger.info('"{}" used command "sync" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
         return
-    await bot.say('Command not implemented')
+    await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNEL']['ID']))
+    await bot.say(sync())
 
 
-async def check_new_members():
+def sync():
+    """
+    TODO
+    """
+    try:
+        r = requests.get(config['URL_ROOT'] + 'sync', headers={'REST-SECRET': config['API_SECRET']}, verify=False)
+        if not r.status_code == 200:
+            raise Exception('Status code was {}, not 200'.format(r.status_code))
+        js = r.json()
+        if not js['existing_members'] and not js['new_members'] and not js['left_members']:
+            message = 'No membership changes'
+            logger.info(message)
+            return message
+        message = 'Existing members added to roster: {}\nAccepted applicants: {}\nCharacters who left the corp: {}'.format(
+            ', '.join(js['existing_members'] or 'None'),
+            ', '.join(js['new_members'] or 'None'),
+            ', '.join(js['left_members'] or 'None')
+        )
+        return message
+    except Exception as e:
+        print('Exception syncing membership: ' + str(e))
+        return 'Error!'
+
+
+async def schedule_sync():
+    """
+    TODO
+    """
     while True:
-        logger.info('Checking for new members ...')
-        await asyncio.sleep(5)
-        # TODO
-        logger.info('No new members')
+        logger.info('Sleeping for 1 hour ...')
         await asyncio.sleep(3600)
+        await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNEL']['ID']))
+        logger.info('Syncing membership ...')
+        await bot.send_message(discord.Object(id=config['PRIVATE_COMMAND_CHANNEL']['ID']), sync())
 
 
-async def check_members_left():
+async def schedule_new_apps():
+    """
+    TODO
+    """
     while True:
-        logger.info('Checking for members who left ...')
-        await asyncio.sleep(5)
-        # TODO
-        logger.info('No members left')
+        logger.info('Sleeping for 1 hour ...')
         await asyncio.sleep(3600)
+        logger.info('Checking for new applications ...')
+        # TODO
+        logger.info('No new applications')
 
 
-async def check_invalid_keys():
+async def schedule_invalid_keys():
+    """
+    TODO
+    """
     while True:
+        logger.info('Sleeping for 2 hours ...')
+        await asyncio.sleep(7200)
         logger.info('Checking for invalid keys ...')
-        await asyncio.sleep(5)
         # TODO
         logger.info('No invalid keys')
-        await asyncio.sleep(3600)
 
 
 if __name__ == '__main__':
     try:
+        logger.info('Scheduling background tasks ...')
+        bot.loop.create_task(schedule_sync())
+        bot.loop.create_task(schedule_new_apps())
+        bot.loop.create_task(schedule_invalid_keys())
         logger.info('Starting run loop ...')
-        asyncio.ensure_future(asyncio.wait((
-            asyncio.ensure_future(check_new_members()),
-            asyncio.ensure_future(check_members_left()),
-            asyncio.ensure_future(check_invalid_keys())
-        )))
         bot.loop.run_until_complete(bot.start(config['TOKEN']))
     except KeyboardInterrupt:
         logger.warning('Logging out ...')

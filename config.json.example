@@ -10,5 +10,10 @@
         },
         "FILE": "log.txt"
     },
-    "PRIVATE_COMMAND_CHANNEL": "recruitment"
+    "PRIVATE_COMMAND_CHANNEL": {
+        "id": 0,
+        "name": ""
+    },
+    "URL_ROOT": "https://getin-hr.celeodor.com/",
+    "API_SECRET": ""
 }
