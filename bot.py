@@ -9,11 +9,11 @@ from discord.ext import commands
 import requests
 
 
-# config
+# config setup
 with open('config.json') as f:
     config = json.load(f)
 
-# logging
+# logging setup
 logger = logging.getLogger('discord')
 logger.setLevel(config['LOGGING']['LEVEL']['ALL'])
 formatter = logging.Formatter(style='{', fmt='{asctime} [{levelname}] {message}', datefmt='%Y-%m-%d %H:%M:%S')
@@ -26,11 +26,17 @@ handler.setFormatter(formatter)
 handler.setLevel(config['LOGGING']['LEVEL']['FILE'])
 logger.addHandler(handler)
 
-# bot
+# bot setup
 logger.info('Creating bot object ...')
 bot = commands.Bot(command_prefix=config['COMMAND_PREFIX'], description=config['DESCRIPTION'])
 logger.info('Getting private channel reference ...')
 logger.info('Setup complete')
+
+
+@bot.event
+async def on_ready():
+    logger.info('Logged as')
+    await bot.change_status(game=discord.Game(name='HR'))
 
 
 @bot.event
@@ -60,9 +66,6 @@ async def on_message(message):
     help='Returns the author and source code repository URL of this bot'
 )
 async def command_source():
-    """
-    TODO
-    """
     await bot.say('Celeodor (EVE: Celeo Servasse), https://git.celeodor.com/Celeo/GETIN-HR-Discord')
 
 
@@ -73,34 +76,11 @@ async def command_source():
     pass_context=True
 )
 async def command_schedule(context):
-    """
-    TODO
-    """
     if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
         await bot.say('This command cannot be used from this channel')
         logger.info('"{}" used command "schedule" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
         return
-    await bot.say('Command not implemented')
-
-
-@bot.command(
-    name='check',
-    brief='Check a member\'s status',
-    help='Checks the status of a member in the corporation or an applicant in the web app',
-    pass_context=True
-)
-async def command_check(context, target: str=None):
-    """
-    TODO
-    """
-    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
-        await bot.say('This command cannot be used from this channel')
-        logger.info('"{}" used command "check" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
-        return
-    if not target:
-        await bot.say('{} check [name]'.format(config['COMMAND_PREFIX']))
-        return
-    await bot.say('Command not implemented')
+    await bot.say('Syncing membership: every 1 hour\nChecking new apps: every 15 minutes\nChecking invalid keys: every 2 hours')
 
 
 @bot.command(
@@ -110,21 +90,30 @@ async def command_check(context, target: str=None):
     pass_context=True
 )
 async def command_sync(context):
-    """
-    TODO
-    """
     if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
         await bot.say('This command cannot be used from this channel')
         logger.info('"{}" used command "sync" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
         return
-    await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNEL']['ID']))
+    await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
     await bot.say(sync())
 
 
+@bot.command(
+    name='apps',
+    brief='Check apps',
+    help='Calls the web app to check for new applications',
+    pass_context=True
+)
+async def command_apps(context):
+    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
+        await bot.say('This command cannot be used from this channel')
+        logger.info('"{}" used command "sync" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
+        return
+    await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
+    await bot.say(check_apps())
+
+
 def sync():
-    """
-    TODO
-    """
     try:
         r = requests.get(config['URL_ROOT'] + 'sync', headers={'REST-SECRET': config['API_SECRET']}, verify=False)
         if not r.status_code == 200:
@@ -141,38 +130,45 @@ def sync():
         )
         return message
     except Exception as e:
-        print('Exception syncing membership: ' + str(e))
+        logger.error('Exception syncing membership: ' + str(e))
         return 'Error!'
 
 
 async def schedule_sync():
-    """
-    TODO
-    """
     while True:
         logger.info('Sleeping for 1 hour ...')
         await asyncio.sleep(3600)
-        await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNEL']['ID']))
+        await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
         logger.info('Syncing membership ...')
-        await bot.send_message(discord.Object(id=config['PRIVATE_COMMAND_CHANNEL']['ID']), sync())
+        result = sync()
+        if not result == 'No membership changes':
+            await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), 'Scheduled sync: ' + result)
+
+
+def check_apps():
+    try:
+        r = requests.get(config['URL_ROOT'] + 'apps', headers={'REST-SECRET': config['API_SECRET']}, verify=False)
+        if not r.status_code == 200:
+            raise Exception('Status code was {}, not 200'.format(r.status_code))
+        js = r.json()
+        if js:
+            return 'New applications: ' + ', '.join(js)
+        else:
+            logger.info('No new applications')
+    except Exception as e:
+        logger.error('Exception in schedule_new_apps: ' + str(e))
+        return 'Error!'
 
 
 async def schedule_new_apps():
-    """
-    TODO
-    """
     while True:
-        logger.info('Sleeping for 1 hour ...')
-        await asyncio.sleep(3600)
+        logger.info('Sleeping for 15 minutes ...')
+        await asyncio.sleep(900)
         logger.info('Checking for new applications ...')
-        # TODO
-        logger.info('No new applications')
+        await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), check_apps())
 
 
 async def schedule_invalid_keys():
-    """
-    TODO
-    """
     while True:
         logger.info('Sleeping for 2 hours ...')
         await asyncio.sleep(7200)

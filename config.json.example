@@ -4,16 +4,16 @@
     "DESCRIPTION": "",
     "LOGGING": {
         "LEVEL": {
-            "ALL": 10,
-            "CONSOLE": 10,
+            "ALL": 20,
+            "CONSOLE": 20,
             "FILE": 20
         },
         "FILE": "log.txt"
     },
     "PRIVATE_COMMAND_CHANNEL": {
-        "id": 0,
-        "name": ""
+        "ID": 0,
+        "NAME": ""
     },
-    "URL_ROOT": "https://getin-hr.celeodor.com/",
+    "URL_ROOT": "",
     "API_SECRET": ""
 }
