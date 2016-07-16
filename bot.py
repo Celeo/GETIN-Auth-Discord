@@ -35,7 +35,7 @@ logger.info('Setup complete')
 
 @bot.event
 async def on_ready():
-    logger.info('Logged as')
+    logger.info('Logged in')
     await bot.change_status(game=discord.Game(name='HR'))
 
 
@@ -124,9 +124,9 @@ def sync():
             logger.info(message)
             return message
         message = 'Existing members added to roster: {}\nAccepted applicants: {}\nCharacters who left the corp: {}'.format(
-            ', '.join(js['existing_members'] or 'None'),
-            ', '.join(js['new_members'] or 'None'),
-            ', '.join(js['left_members'] or 'None')
+            ', '.join(js['existing_members'] or ('None', )),
+            ', '.join(js['new_members'] or ('None', )),
+            ', '.join(js['left_members'] or ('None', ))
         )
         return message
     except Exception as e:
@@ -154,7 +154,7 @@ def check_apps():
         if js:
             return 'New applications: ' + ', '.join(js)
         else:
-            logger.info('No new applications')
+            return 'No new applications'
     except Exception as e:
         logger.error('Exception in schedule_new_apps: ' + str(e))
         return 'Error!'
