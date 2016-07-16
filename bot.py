@@ -165,7 +165,9 @@ async def schedule_new_apps():
         logger.info('Sleeping for 15 minutes ...')
         await asyncio.sleep(900)
         logger.info('Checking for new applications ...')
-        await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), check_apps())
+        result = check_apps()
+        if not result == 'No new applications':
+            await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), result)
 
 
 async def schedule_invalid_keys():
