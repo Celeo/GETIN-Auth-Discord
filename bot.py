@@ -142,7 +142,7 @@ async def schedule_sync():
         logger.info('Syncing membership ...')
         result = sync()
         if not result == 'No membership changes':
-            await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), 'Scheduled sync: ' + result)
+            await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), 'Scheduled sync:\n\n' + result)
 
 
 def check_apps():
