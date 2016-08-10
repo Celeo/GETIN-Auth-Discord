@@ -50,13 +50,16 @@ async def on_message(message):
     Returns:
         None
     """
-    if message.author == bot.user:
-        return
-    if message.content.startswith(config['COMMAND_PREFIX']):
-        logger.info('Command "{}" from "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
-    if 'bot' in message.content.lower():
-        logger.info('Bot in message: "{}" by "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
-    await bot.process_commands(message)
+    try:
+        if message.author == bot.user:
+            return
+        if message.content.startswith(config['COMMAND_PREFIX']):
+            logger.info('Command "{}" from "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
+        if 'bot' in message.content.lower():
+            logger.info('Bot in message: "{}" by "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
+        await bot.process_commands(message)
+    except Exception as e:
+        logger.error('Exception in on_message(): ' + e)
 
 
 @bot.command(
@@ -66,7 +69,10 @@ async def on_message(message):
     help='Returns the author and source code repository URL of this bot'
 )
 async def command_source():
-    await bot.say('Celeodor (EVE: Celeo Servasse), https://git.celeodor.com/Celeo/GETIN-HR-Discord')
+    try:
+        await bot.say('Celeodor (EVE: Celeo Servasse), https://git.celeodor.com/Celeo/GETIN-HR-Discord')
+    except Exception as e:
+        logger.error('Exception in !author: ' + e)
 
 
 @bot.command(
@@ -76,11 +82,14 @@ async def command_source():
     pass_context=True
 )
 async def command_schedule(context):
-    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
-        await bot.say('This command cannot be used from this channel')
-        logger.info('"{}" used command "schedule" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
-        return
-    await bot.say('Syncing membership: every 1 hour\nChecking new apps: every 15 minutes\nChecking invalid keys: every 2 hours')
+    try:
+        if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
+            await bot.say('This command cannot be used from this channel')
+            logger.info('"{}" used command "schedule" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
+            return
+        await bot.say('Syncing membership: every 1 hour\nChecking new apps: every 15 minutes\nChecking invalid keys: every 2 hours')
+    except Exception as e:
+        logger.error('Exception in !schedule: ' + e)
 
 
 @bot.command(
@@ -90,12 +99,15 @@ async def command_schedule(context):
     pass_context=True
 )
 async def command_sync(context):
-    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
-        await bot.say('This command cannot be used from this channel')
-        logger.info('"{}" used command "sync" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
-        return
-    await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
-    await bot.say(sync())
+    try:
+        if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
+            await bot.say('This command cannot be used from this channel')
+            logger.info('"{}" used command "sync" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
+            return
+        await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
+        await bot.say(sync())
+    except Exception as e:
+        logger.error('Exception in !sync: ' + e)
 
 
 @bot.command(
@@ -105,12 +117,15 @@ async def command_sync(context):
     pass_context=True
 )
 async def command_apps(context):
-    if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
-        await bot.say('This command cannot be used from this channel')
-        logger.info('"{}" used command "sync" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
-        return
-    await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
-    await bot.say(check_apps())
+    try:
+        if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
+            await bot.say('This command cannot be used from this channel')
+            logger.info('"{}" used command "sync" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
+            return
+        await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
+        await bot.say(check_apps())
+    except Exception as e:
+        logger.error('Exception in !apps: ' + e)
 
 
 def sync():
@@ -136,13 +151,16 @@ def sync():
 
 async def schedule_sync():
     while True:
-        logger.info('Sleeping for 1 hour ...')
-        await asyncio.sleep(3600)
-        await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
-        logger.info('Syncing membership ...')
-        result = sync()
-        if not result == 'No membership changes':
-            await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), 'Scheduled sync:\n\n' + result)
+        try:
+            logger.info('Sleeping for 1 hour ...')
+            await asyncio.sleep(3600)
+            await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
+            logger.info('Syncing membership ...')
+            result = sync()
+            if not result == 'No membership changes':
+                await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), 'Scheduled sync:\n\n' + result)
+        except Exception as e:
+            logger.error('Exception in schedule_sync(): ' + e)
 
 
 def check_apps():
@@ -162,21 +180,27 @@ def check_apps():
 
 async def schedule_new_apps():
     while True:
-        logger.info('Sleeping for 15 minutes ...')
-        await asyncio.sleep(900)
-        logger.info('Checking for new applications ...')
-        result = check_apps()
-        if not result == 'No new applications':
-            await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), result)
+        try:
+            logger.info('Sleeping for 15 minutes ...')
+            await asyncio.sleep(900)
+            logger.info('Checking for new applications ...')
+            result = check_apps()
+            if not result == 'No new applications':
+                await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), result)
+        except Exception as e:
+            logger.error('Exception in schedule_new_apps(): ' + e)
 
 
 async def schedule_invalid_keys():
     while True:
-        logger.info('Sleeping for 2 hours ...')
-        await asyncio.sleep(7200)
-        logger.info('Checking for invalid keys ...')
-        # TODO
-        logger.info('No invalid keys')
+        try:
+            logger.info('Sleeping for 2 hours ...')
+            await asyncio.sleep(7200)
+            logger.info('Checking for invalid keys ...')
+            # TODO
+            logger.info('No invalid keys')
+        except Exception as e:
+            logger.error('Exception in schedule_invalid_keys(): ' + e)
 
 
 if __name__ == '__main__':
@@ -184,7 +208,7 @@ if __name__ == '__main__':
         logger.info('Scheduling background tasks ...')
         bot.loop.create_task(schedule_sync())
         bot.loop.create_task(schedule_new_apps())
-        bot.loop.create_task(schedule_invalid_keys())
+        # bot.loop.create_task(schedule_invalid_keys())
         logger.info('Starting run loop ...')
         bot.loop.run_until_complete(bot.start(config['TOKEN']))
     except KeyboardInterrupt:
