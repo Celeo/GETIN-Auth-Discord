@@ -85,7 +85,7 @@ async def command_schedule(context):
     try:
         if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
             await bot.say('This command cannot be used from this channel')
-            logger.info('"{}" used command "schedule" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
+            logger.info('"{}" used command "schedule" in "{}"'.format(context.message.author.name, context.messsage.channel.name))
             return
         await bot.say('Syncing membership: every 1 hour\nChecking new apps: every 15 minutes\nChecking invalid keys: every 2 hours')
     except Exception as e:
@@ -102,7 +102,7 @@ async def command_sync(context):
     try:
         if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
             await bot.say('This command cannot be used from this channel')
-            logger.info('"{}" used command "sync" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
+            logger.info('"{}" used command "sync" in "{}"'.format(context.message.author.name, context.messsage.channel.name))
             return
         await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
         await bot.say(sync())
@@ -120,7 +120,7 @@ async def command_apps(context):
     try:
         if not context.message.channel.name == config['PRIVATE_COMMAND_CHANNEL']['NAME']:
             await bot.say('This command cannot be used from this channel')
-            logger.info('"{}" used command "sync" in "{}"'.format(context.message.user.name, context.messsage.channel.name))
+            logger.info('"{}" used command "sync" in "{}"'.format(context.message.author.name, context.messsage.channel.name))
             return
         await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
         await bot.say(check_apps())
