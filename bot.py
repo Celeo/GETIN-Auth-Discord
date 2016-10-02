@@ -36,7 +36,7 @@ logger.info('Setup complete')
 @bot.event
 async def on_ready():
     logger.info('Logged in')
-    await bot.change_status(game=discord.Game(name='HR'))
+    await bot.change_status(game=discord.Game(name='Auth'))
 
 
 @bot.event
