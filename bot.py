@@ -59,7 +59,7 @@ async def on_message(message):
             logger.info('Bot in message: "{}" by "{}" in "{}"'.format(message.content, message.author.name, message.channel.name))
         await bot.process_commands(message)
     except Exception as e:
-        logger.error('Exception in on_message(): ' + e)
+        logger.error('Exception in on_message(): ' + str(e))
 
 
 @bot.command(
@@ -72,7 +72,7 @@ async def command_source():
     try:
         await bot.say('Celeodor (EVE: Celeo Servasse), https://git.celeodor.com/Celeo/GETIN-HR-Discord')
     except Exception as e:
-        logger.error('Exception in !author: ' + e)
+        logger.error('Exception in !author: ' + str(e))
 
 
 @bot.command(
@@ -89,7 +89,7 @@ async def command_schedule(context):
             return
         await bot.say('Syncing membership: every 1 hour\nChecking new apps: every 15 minutes\nChecking invalid keys: every 2 hours')
     except Exception as e:
-        logger.error('Exception in !schedule: ' + e)
+        logger.error('Exception in !schedule: ' + str(e))
 
 
 @bot.command(
@@ -107,7 +107,7 @@ async def command_sync(context):
         await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
         await bot.say(sync())
     except Exception as e:
-        logger.error('Exception in !sync: ' + e)
+        logger.error('Exception in !sync: ' + str(e))
 
 
 @bot.command(
@@ -125,7 +125,7 @@ async def command_apps(context):
         await bot.send_typing(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])))
         await bot.say(check_apps())
     except Exception as e:
-        logger.error('Exception in !apps: ' + e)
+        logger.error('Exception in !apps: ' + str(e))
 
 
 def sync():
@@ -160,7 +160,7 @@ async def schedule_sync():
             if not result == 'No membership changes':
                 await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), 'Scheduled sync:\n\n' + result)
         except Exception as e:
-            logger.error('Exception in schedule_sync(): ' + e)
+            logger.error('Exception in schedule_sync(): ' + str(e))
 
 
 def check_apps():
@@ -188,7 +188,7 @@ async def schedule_new_apps():
             if not result == 'No new applications':
                 await bot.send_message(bot.get_channel(str(config['PRIVATE_COMMAND_CHANNEL']['ID'])), result)
         except Exception as e:
-            logger.error('Exception in schedule_new_apps(): ' + e)
+            logger.error('Exception in schedule_new_apps(): ' + str(e))
 
 
 async def schedule_invalid_keys():
@@ -200,7 +200,7 @@ async def schedule_invalid_keys():
             # TODO
             logger.info('No invalid keys')
         except Exception as e:
-            logger.error('Exception in schedule_invalid_keys(): ' + e)
+            logger.error('Exception in schedule_invalid_keys(): ' + str(e))
 
 
 if __name__ == '__main__':
