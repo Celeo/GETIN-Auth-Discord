@@ -15,5 +15,6 @@
         "NAME": ""
     },
     "URL_ROOT": "",
-    "API_SECRET": ""
+    "API_SECRET": "",
+    "PASTEBIN_SECRET": ""
 }
