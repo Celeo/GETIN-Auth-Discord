@@ -22,5 +22,6 @@
   },
   "URL_ROOT": "",
   "API_SECRET": "",
-  "PASTEBIN_SECRET": ""
+  "PASTEBIN_SECRET": "",
+  "PASTEBIN_USER_AGENT": ""
 }

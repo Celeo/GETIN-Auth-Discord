@@ -4,7 +4,7 @@ import logging
 import sys
 import asyncio
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands
@@ -105,7 +105,7 @@ async def command_sync(context):
             await bot.say('This command cannot be used from this channel')
             logger.info('"{}" used command "sync" in "{}"'.format(context.message.author.name, context.messsage.channel.name))
             return
-        await bot.send_typing(bot.get_channel(config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
+        await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
         await bot.say(sync())
     except Exception as e:
         logger.error('Exception in !sync: ' + str(e))
@@ -128,10 +128,77 @@ async def command_apps(context):
             await bot.say('This command cannot be used from this channel')
             logger.info('"{}" used command "sync" in "{}"'.format(context.message.author.name, context.messsage.channel.name))
             return
-        await bot.send_typing(bot.get_channel(config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
+        await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
         await bot.say(check_apps())
     except Exception as e:
         logger.error('Exception in !apps: ' + str(e))
+
+
+async def schedule_sync():
+    """Run-forever method to sync membership on a schedule"""
+    while True:
+        await asyncio.sleep(10)
+        try:
+            await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
+            logger.info('Syncing membership ...')
+            result = sync()
+            if not result == 'No membership changes':
+                await bot.send_message(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']), 'Scheduled sync:\n\n' + result)
+        except Exception as e:
+            logger.error('Exception in schedule_sync(): ' + str(e))
+        finally:
+            logger.info('Sleeping for {} seconds ...'.format(SYNC_SLEEP_TIME))
+            await asyncio.sleep(SYNC_SLEEP_TIME)
+
+
+async def schedule_new_apps():
+    """Run-forever method to check applications on a schedule"""
+    while True:
+        await asyncio.sleep(10)
+        try:
+            await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
+            logger.info('Checking for new applications ...')
+            result = check_apps()
+            if not result == 'No new applications':
+                await bot.send_message(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']), result)
+        except Exception as e:
+            logger.error('Exception in schedule_new_apps(): ' + str(e))
+        finally:
+            logger.info('Sleeping for {} seconds ...'.format(NEW_APPS_SLEEP_TIME))
+            await asyncio.sleep(NEW_APPS_SLEEP_TIME)
+
+
+async def schedule_invalid_keys():
+    """Run-forever method to check invalid API keys on a schedule"""
+    while True:
+        await asyncio.sleep(10)
+        try:
+            await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
+            logger.info('Checking for invalid keys ...')
+            # TODO
+            logger.info('No invalid keys')
+        except Exception as e:
+            logger.error('Exception in schedule_invalid_keys(): ' + str(e))
+        finally:
+            logger.info('Sleeping for {} seconds ...'.format(INVALID_KEYS_SLEEP_TIME))
+            await asyncio.sleep(INVALID_KEYS_SLEEP_TIME)
+
+
+async def schedule_killboard():
+    """Run-forever method to check killboard activity on a schedule"""
+    while True:
+        await asyncio.sleep(10)
+        try:
+            logger.info('Checking killboards ...')
+            result = check_killboard()
+            if result:
+                logger.info('Sending link to activity channel')
+                await bot.send_message(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['ACTIVITY']['ID']), result)
+        except Exception as e:
+            logger.error('Exception in schedule_killboard(): ' + str(e))
+        finally:
+            logger.info('Sleeping for {} seconds'.format(KILLBOARD_SLEEP_TIME))
+            await asyncio.sleep(KILLBOARD_SLEEP_TIME)
 
 
 def sync():
@@ -156,21 +223,6 @@ def sync():
         return 'Error!'
 
 
-async def schedule_sync():
-    """Run-forever method to sync membership on a schedule"""
-    while True:
-        try:
-            logger.info('Sleeping for {} seconds ...'.format(SYNC_SLEEP_TIME))
-            await asyncio.sleep(SYNC_SLEEP_TIME)
-            await bot.send_typing(bot.get_channel(config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
-            logger.info('Syncing membership ...')
-            result = sync()
-            if not result == 'No membership changes':
-                await bot.send_message(bot.get_channel(config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']), 'Scheduled sync:\n\n' + result)
-        except Exception as e:
-            logger.error('Exception in schedule_sync(): ' + str(e))
-
-
 def check_apps():
     """Makes an API request to the server to check applications
 
@@ -191,42 +243,13 @@ def check_apps():
         return 'Error!'
 
 
-async def schedule_new_apps():
-    """Run-forever method to check applications on a schedule"""
-    while True:
-        try:
-            logger.info('Checking for new applications ...')
-            result = check_apps()
-            if not result == 'No new applications':
-                await bot.send_message(bot.get_channel(config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']), result)
-        except Exception as e:
-            logger.error('Exception in schedule_new_apps(): ' + str(e))
-        finally:
-            logger.info('Sleeping for {} seconds ...'.format(NEW_APPS_SLEEP_TIME))
-            await asyncio.sleep(NEW_APPS_SLEEP_TIME)
-
-
-async def schedule_invalid_keys():
-    """Run-forever method to check invalid API keys on a schedule"""
-    while True:
-        try:
-            logger.info('Checking for invalid keys ...')
-            # TODO
-            logger.info('No invalid keys')
-        except Exception as e:
-            logger.error('Exception in schedule_invalid_keys(): ' + str(e))
-        finally:
-            logger.info('Sleeping for {} seconds ...'.format(INVALID_KEYS_SLEEP_TIME))
-            await asyncio.sleep(INVALID_KEYS_SLEEP_TIME)
-
-
 def get_last_month():
     """Utility method to return the timestamp for killboard range
 
     Returns:
         int: timestamp
     """
-    return (datetime.utcnow() - datetime.timedelta(days=ACTIVITY_TIME_DAYS)).strftime('%Y%m%d%H') + '00'
+    return (datetime.utcnow() - timedelta(days=ACTIVITY_TIME_DAYS)).strftime('%Y%m%d%H') + '00'
 
 
 def get_database_mains():
@@ -290,22 +313,25 @@ def check_killboard():
             logger.warning('No valid IDs for found character linked to {}'.format(name))
             continue
         request_url += '/startTime/{}/limit/1/'.format(get_last_month())
-        logger.debug('Making killboard request to {}'.format(request_url))
+        logger.info('Making killboard request to {}'.format(request_url))
         r = requests.get(request_url, headers={
             'Accept-Encoding': 'gzip',
-            'User-Agent': 'Maintainer: Brian, brian.van.hyfte@gmail.com'
+            'User-Agent': 'Maintainer: ' + config['PASTEBIN_USER_AGENT']
         })
         if r.status_code != 200:
             logger.error('Got status code {} from {}'.format(r.status_code, request_url))
             continue
         data = r.json()
         if not data:
+            logger.info(f'{name} has no kills, adding to list')
             noKillsList.append(name)
     if not noKillsList:
+        logger.info('All characters had recent klls')
         return None
     paste_contents = '\n'.join(noKillsList)
+    logger.info('Data being posted to pastebin: ' + paste_contents.replace('\n', ', '))
     r = requests.post('http://pastebin.com/api/api_post.php', data={
-        'api_dev_key': '',
+        'api_dev_key': config['PASTEBIN_SECRET'],
         'api_paste_expire_date': '1D',
         'api_option': 'paste',
         'api_paste_private': '1',
@@ -313,22 +339,9 @@ def check_killboard():
     })
     if not r.status_code == 200:
         raise Exception(f'POST to pastebin failed with status code {r.status_code}. Contents of paste: {paste_contents}')
-    return r.text.replace('https://pastebin.com/', 'https://pastebin.com/raw/')
-
-
-async def schedule_killboard():
-    """Run-forever method to check killboard activity on a schedule"""
-    while True:
-        try:
-            logger.info('Checking killboards ...')
-            result = check_killboard()
-            if result:
-                await bot.send_message(bot.get_channel(config['PRIVATE_COMMAND_CHANNELS']['ACTIVITY']['ID']))
-        except Exception as e:
-            logger.error('Exception in schedule_killboard(): ' + str(e))
-        finally:
-            logger.info('Sleeping for {} seconds'.format(KILLBOARD_SLEEP_TIME))
-            await asyncio.sleep(KILLBOARD_SLEEP_TIME)
+    pastebin_link = r.text.replace('https://pastebin.com/', 'https://pastebin.com/raw/')
+    logger.info('Pastebin link is ' + pastebin_link)
+    return pastebin_link
 
 
 if __name__ == '__main__':
@@ -344,6 +357,8 @@ if __name__ == '__main__':
         logger.warning('Logging out ...')
         bot.loop.run_until_complete(bot.logout())
         logger.warning('Logged out')
+    except Exception as e:
+        logger.error('Caught unknown error: ' + str(e))
     finally:
         logger.warning('Closing ...')
         bot.loop.close()
