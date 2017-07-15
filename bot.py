@@ -352,7 +352,6 @@ if __name__ == '__main__':
         bot.loop.create_task(schedule_killboard())
         # bot.loop.create_task(schedule_invalid_keys())
         logger.info('Starting run loop ...')
-        # bot.loop.run_until_complete(bot.start(config['TOKEN']))
         bot.run(config['TOKEN'])
     except KeyboardInterrupt:
         logger.warning('Logging out ...')
