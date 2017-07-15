@@ -136,8 +136,8 @@ async def command_apps(context):
 
 async def schedule_sync():
     """Run-forever method to sync membership on a schedule"""
-    while True:
-        await asyncio.sleep(10)
+    while not bot.is_closed:
+        await bot.wait_until_ready()
         try:
             await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
             logger.info('Syncing membership ...')
@@ -153,8 +153,8 @@ async def schedule_sync():
 
 async def schedule_new_apps():
     """Run-forever method to check applications on a schedule"""
-    while True:
-        await asyncio.sleep(10)
+    while not bot.is_closed:
+        await bot.wait_until_ready()
         try:
             await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
             logger.info('Checking for new applications ...')
@@ -170,8 +170,8 @@ async def schedule_new_apps():
 
 async def schedule_invalid_keys():
     """Run-forever method to check invalid API keys on a schedule"""
-    while True:
-        await asyncio.sleep(10)
+    while not bot.is_closed:
+        await bot.wait_until_ready()
         try:
             await bot.send_typing(discord.Object(id=config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']['ID']))
             logger.info('Checking for invalid keys ...')
@@ -186,8 +186,8 @@ async def schedule_invalid_keys():
 
 async def schedule_killboard():
     """Run-forever method to check killboard activity on a schedule"""
-    while True:
-        await asyncio.sleep(10)
+    while not bot.is_closed:
+        await bot.wait_until_ready()
         try:
             logger.info('Checking killboards ...')
             result = check_killboard()
@@ -352,7 +352,8 @@ if __name__ == '__main__':
         bot.loop.create_task(schedule_killboard())
         # bot.loop.create_task(schedule_invalid_keys())
         logger.info('Starting run loop ...')
-        bot.loop.run_until_complete(bot.start(config['TOKEN']))
+        # bot.loop.run_until_complete(bot.start(config['TOKEN']))
+        bot.run(config['TOKEN'])
     except KeyboardInterrupt:
         logger.warning('Logging out ...')
         bot.loop.run_until_complete(bot.logout())
