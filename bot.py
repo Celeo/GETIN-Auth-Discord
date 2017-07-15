@@ -336,8 +336,8 @@ if __name__ == '__main__':
         logger.info('Scheduling background tasks ...')
         bot.loop.create_task(schedule_sync())
         bot.loop.create_task(schedule_new_apps())
-        # bot.loop.create_task(schedule_invalid_keys())
         bot.loop.create_task(schedule_killboard())
+        # bot.loop.create_task(schedule_invalid_keys())
         logger.info('Starting run loop ...')
         bot.loop.run_until_complete(bot.start(config['TOKEN']))
     except KeyboardInterrupt:
