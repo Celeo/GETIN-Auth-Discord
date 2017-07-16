@@ -6,6 +6,7 @@ import asyncio
 import sqlite3
 from datetime import datetime, timedelta
 
+import re
 import discord
 from discord.ext import commands
 import requests
@@ -25,6 +26,7 @@ ACTIVITY_WHITELIST = [
     'Celeo Servasse',
     'Alex Kommorov'
 ]
+WORMBRO_ID = 98134538
 
 # logging setup
 logger = logging.getLogger('discord')
@@ -277,10 +279,40 @@ def get_database_alts(main):
     """
     connection = sqlite3.connect('../getin-auth/data.db')
     cursor = connection.cursor()
-    cursor.execute('SELECT character_name, character_id FROM member WHERE main=? AND status = "Accepted" AND character_id != "NULL"', (main, ))
+    cursor.execute('SELECT character_id FROM member WHERE main=? AND status = "Accepted" AND character_id != "NULL"', (main, ))
     data = cursor.fetchall()
     connection.close()
-    return [[e[1], e[0]] for e in data]
+    return [e[0] for e in data]
+
+
+def get_character_id( main ):
+    """Gets a character id from the database
+
+    Args:
+        main (str): character name
+
+    Returns:
+        list: character id
+    """
+    connection = sqlite3.connect('../getin-auth/data.db')
+    cursor = connection.cursor()
+    cursor.execute("SELECT character_id FROM member WHERE character_name=? AND character_id != 'NULL'", (main, ))
+    data = cursor.fetchall()
+    connection.close()
+    return [e[0] for e in data]
+
+
+def convert_to_zkill_date( esiDate ):
+    """Converts EvE ESI date to EvE Zkillboard date
+
+    Args:
+        esiDate (str): date in ESI format
+
+    Returns:
+        string: zkillboard date format
+    """
+    zkillDate = re.sub('[^0-9]','',esiDate[:-4])
+    return zkillDate
 
 
 def check_killboard():
@@ -289,7 +321,7 @@ def check_killboard():
     Returns:
         str: message to post in chat
     """
-    logger.info('Starting killboad check ...')
+    logger.info('Starting killboard check ...')
     noKillsList = []
     mains = get_database_mains()
     if not mains:
@@ -298,16 +330,36 @@ def check_killboard():
     for index, name in enumerate(mains):
         if name in ACTIVITY_WHITELIST:
             continue
+
+        #Check if person has been in corp for a month
+        charID = get_character_id(name)
+        if len(charID) <= 0:
+            logger.warning("No character ID found for " + name)
+            continue
+        corpHistoryURL = "https://esi.tech.ccp.is/latest/characters/" + charID[0] + "/corporationhistory/?datasource=tranquility"
+        corpHistory = requests.get(corpHistoryURL)
+        corpHistoryJSON = corpHistory.json()
+        hasBeenInCorp = False
+        for j in corpHistoryJSON:
+            if j["corporation_id"] == WORMBRO_ID:
+                if convert_to_zkill_date(j["start_date"])< get_last_month():
+                    hasBeenInCorp = True
+                    break
+        if not hasBeenInCorp:
+            logger.info(name + " hasn't been in corp for a month! Continuing ...")
+            continue
+
         alts = get_database_alts(name)
+        alts.sort(key=int)
         request_url = 'https://zkillboard.com/api/characterID/'
         found = False
         for i in range(len(alts)):
-            if not alts[i][0]:
-                logger.warning('{} does not have an ID linked'.format(alts[i][1]))
+            if not alts[i]:
+                logger.warning('No valid IDs found for character linked to {}'.format(name))
                 continue
             if i > 0:
                 request_url += ','
-            request_url += str(alts[i][0])
+            request_url += str(alts[i])
             found = True
         if not found:
             logger.warning('No valid IDs for found character linked to {}'.format(name))
@@ -326,7 +378,7 @@ def check_killboard():
             logger.info(f'{name} has no kills, adding to list')
             noKillsList.append(name)
     if not noKillsList:
-        logger.info('All characters had recent klls')
+        logger.info('All characters had recent kills')
         return None
     paste_contents = '\n'.join(noKillsList)
     logger.info('Data being posted to pastebin: ' + paste_contents.replace('\n', ', '))
