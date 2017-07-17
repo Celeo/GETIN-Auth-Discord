@@ -375,7 +375,7 @@ def check_killboard():
             continue
         data = r.json()
         if not data:
-            logger.info(f'{name} has no kills, adding to list')
+            logger.info('{} has no kills, adding to list'.format(name))
             noKillsList.append(name)
     if not noKillsList:
         logger.info('All characters had recent kills')
@@ -390,7 +390,7 @@ def check_killboard():
         'api_paste_code': paste_contents
     })
     if not r.status_code == 200:
-        raise Exception(f'POST to pastebin failed with status code {r.status_code}. Contents of paste: {paste_contents}')
+        raise Exception('POST to pastebin failed with status code {}. Contents of paste: {}'.format(r.status_code, paste_contents))
     pastebin_link = r.text.replace('https://pastebin.com/', 'https://pastebin.com/raw/')
     logger.info('Pastebin link is ' + pastebin_link)
     return pastebin_link
