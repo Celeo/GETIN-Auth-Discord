@@ -285,7 +285,7 @@ def get_database_alts(main):
     return [e[0] for e in data]
 
 
-def get_character_id( main ):
+def get_character_id(main):
     """Gets a character id from the database
 
     Args:
@@ -302,7 +302,7 @@ def get_character_id( main ):
     return [e[0] for e in data]
 
 
-def convert_to_zkill_date( esiDate ):
+def convert_to_zkill_date(esiDate):
     """Converts EvE ESI date to EvE Zkillboard date
 
     Args:
@@ -311,7 +311,7 @@ def convert_to_zkill_date( esiDate ):
     Returns:
         string: zkillboard date format
     """
-    zkillDate = re.sub('[^0-9]','',esiDate[:-4])
+    zkillDate = re.sub(r'[^0-9]', '', esiDate[:-4])
     return zkillDate
 
 
@@ -331,22 +331,22 @@ def check_killboard():
         if name in ACTIVITY_WHITELIST:
             continue
 
-        #Check if person has been in corp for a month
+        # check if person has been in corp for a month
         charID = get_character_id(name)
         if len(charID) <= 0:
             logger.warning("No character ID found for " + name)
             continue
-        corpHistoryURL = "https://esi.tech.ccp.is/latest/characters/" + charID[0] + "/corporationhistory/?datasource=tranquility"
+        corpHistoryURL = 'https://esi.tech.ccp.is/latest/characters/' + str(charID[0]) + '/corporationhistory/?datasource=tranquility'
         corpHistory = requests.get(corpHistoryURL)
         corpHistoryJSON = corpHistory.json()
         hasBeenInCorp = False
         for j in corpHistoryJSON:
-            if j["corporation_id"] == WORMBRO_ID:
-                if convert_to_zkill_date(j["start_date"])< get_last_month():
+            if j[0]['corporation_id'] == WORMBRO_ID:
+                if convert_to_zkill_date(j['start_date']) < get_last_month():
                     hasBeenInCorp = True
                     break
         if not hasBeenInCorp:
-            logger.info(name + " hasn't been in corp for a month! Continuing ...")
+            logger.info(name + ' hasn\'t been in corp for a month! Continuing ...')
             continue
 
         alts = get_database_alts(name)
