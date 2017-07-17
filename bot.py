@@ -341,7 +341,7 @@ def check_killboard():
         corpHistoryJSON = corpHistory.json()
         hasBeenInCorp = False
         for j in corpHistoryJSON:
-            if j[0]['corporation_id'] == WORMBRO_ID:
+            if j['corporation_id'] == WORMBRO_ID:
                 if convert_to_zkill_date(j['start_date']) < get_last_month():
                     hasBeenInCorp = True
                     break
