@@ -512,10 +512,10 @@ def check_killboard():
 if __name__ == '__main__':
     try:
         logger.info('Scheduling background tasks ...')
-        #bot.loop.create_task(schedule_sync())
-        #bot.loop.create_task(schedule_new_apps())
+        bot.loop.create_task(schedule_sync())
+        bot.loop.create_task(schedule_new_apps())
         bot.loop.create_task(schedule_killboard())
-        # bot.loop.create_task(schedule_invalid_keys())
+        bot.loop.create_task(schedule_invalid_keys())
         logger.info('Starting run loop ...')
         bot.run(config['TOKEN'])
     except KeyboardInterrupt:
