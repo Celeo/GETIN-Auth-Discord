@@ -1,7 +1,7 @@
 {
-  "TOKEN": "",
+  "TOKEN": "MzI5NjUwMTQ1MDM1NTUwNzMx.DDViMw.BBTraiwSSlTWdLYgBfDlqPnroIg",
   "COMMAND_PREFIX": "!",
-  "DESCRIPTION": "",
+  "DESCRIPTION": "The deus bot",
   "LOGGING": {
     "LEVEL": {
       "ALL": 20,
@@ -12,16 +12,42 @@
   },
   "PRIVATE_COMMAND_CHANNELS": {
     "RECRUITMENT": {
-      "ID": "",
-      "NAME": ""
+      "ID": "257994034167939072",
+      "NAME": "general"
     },
     "ACTIVITY": {
-      "ID": "",
-      "NAME": ""
+      "ID": "257994034167939072",
+      "NAME": "general"
     }
   },
   "URL_ROOT": "",
   "API_SECRET": "",
-  "PASTEBIN_SECRET": "",
-  "PASTEBIN_USER_AGENT": ""
+  "PASTEBIN_SECRET": "7ff46fcbefb92ab0817a3ed3864376c0",
+  "PASTEBIN_USER_AGENT": "brian.van.hyfte@gmail.com",
+  "SubscribeRoles":[
+		{
+			"Role":"TEST_DEV",
+			"Name":"Dev",
+			"Type":"CHANNEL",
+			"Description":"Are you a nerd? Join the dev channel!"
+		},
+		{
+			"Role":"TEST_GOLF",
+			"Name":"Golf",
+			"Type":"PINGABLE GROUP",
+			"Description":"Do you like Golf with friends?"
+		},
+		{
+			"Role":"TEST_PUBG",
+			"Name":"PUBG",
+			"Type":"PINGABLE GROUP",
+			"Description":"Winner winner chicken dinner"
+		}
+	],
+	"SubscribeBlacklistedChannels":[
+		{
+			"ID":"257994034167939072"
+		}
+	]
+  
 }

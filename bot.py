@@ -5,6 +5,7 @@ import sys
 import asyncio
 import sqlite3
 from datetime import datetime, timedelta
+from prettytable import PrettyTable
 
 import re
 import discord
@@ -63,7 +64,7 @@ async def on_ready():
 async def command_source():
     """Command - source"""
     try:
-        await bot.say('Celeodor (EVE: Celeo Servasse), https://git.celeodor.com/Celeo/GETIN-HR-Discord')
+        await bot.say('Celeodor (EVE: Celeo Servasse), https://github.com/Celeo/GETIN-Auth-Discord\nWizBoom (EVE: Alex Kommorov),  https://github.com/WizBoom')
     except Exception as e:
         logger.error('Exception in !author: ' + str(e))
 
@@ -135,6 +136,117 @@ async def command_apps(context):
     except Exception as e:
         logger.error('Exception in !apps: ' + str(e))
 
+@bot.command(
+    name='subscribe',
+    brief='Subscribes to certain channels',
+    help='Subscribe to groups on the server. Use !subscribe to see what\' available and use !subscribe [GROUPNAME] to subscribe! See unsubscribing for unsubscribing',
+    pass_context=True
+)
+async def command_subscribe(context):
+    """Command - subscribe"""
+    try:
+        blChannels=[]
+        for bl in config["SubscribeBlacklistedChannels"]:
+            blChannels.append(bl["ID"])
+        if not context.message.channel.id in blChannels:
+            message = await subscribe(context)
+            await bot.say(message)
+        else:
+            await bot.say("This command cannot be used from this channel")
+    except Exception as e:
+        logger.error('Exception in !subscribe: ' + str(e))
+
+async def subscribe(context):
+    message = context.message
+    x = message.content.split()
+    if len(x) <= 1:
+        #RETURN CURRENT GROUPS
+        groupList = PrettyTable()
+        groupList.field_names = ["Name", "Description", "Type"]
+        nothingFound = True
+        for sRole in config["SubscribeRoles"]:
+            role = discord.utils.get(message.server.roles, name=sRole['Role'])
+            if not role is None and not role in message.author.roles:
+                nothingFound = False
+                groupList.add_row([sRole["Name"], sRole["Description"], sRole["Type"]])
+        if not nothingFound:
+            return "```" + groupList.get_string(sortby="Name") + "```"
+        else:
+            return "```No other groups to subscribe to```"
+    args = message.content.split(' ', 1)[1]
+    args = args.strip()
+    args = args.lower()
+
+    for sRole in config["SubscribeRoles"]:
+        clean = sRole['Name'].strip()
+        clean = clean.lower()
+        if args == clean:
+            role = discord.utils.get(message.server.roles, name=sRole['Role'])
+            if role in message.author.roles:
+                return message.author.mention + ", you're already subscribed to " + sRole['Name']
+            if not role is None: 
+                member = message.author
+                await bot.add_roles(member,role) 
+                return message.author.mention + ", you're now subscribed to " + sRole['Name']
+
+    return message.author.mention + ", I can't find " + args
+
+@bot.command(
+    name='unsubscribe',
+    brief='Unsubscribes from channels',
+    help='Unubscribe from groups on the server. Use !unsubscribe to see what you\'re subscribed to and use !unsubscribe [GROUPNAME] to unsubscribe! See subscribing for subscribing',
+    pass_context=True
+)
+async def command_unsubscribe(context):
+    """Command - unsubscribe"""
+    try:
+        blChannels=[]
+        for bl in config["SubscribeBlacklistedChannels"]:
+            blChannels.append(bl["ID"])
+        if not context.message.channel.id in blChannels:
+            message = await unsubscribe(context)
+            await bot.say(message)
+        else:
+            await bot.say("This command cannot be used from this channel")
+    except Exception as e:
+        logger.error('Exception in !unsubscribe: ' + str(e))
+
+
+async def unsubscribe(context):
+    message = context.message
+    x = message.content.split()
+    if len(x) <= 1:
+        #RETURN CURRENT GROUPS
+        groupList = PrettyTable()
+        groupList.field_names = ["Name", "Description", "Type"]
+        nothingFound = True
+        for sRole in config["SubscribeRoles"]:
+            role = discord.utils.get(message.server.roles, name=sRole['Role'])
+            if not role is None and role in message.author.roles:
+                nothingFound = False
+                groupList.add_row([sRole["Name"], sRole["Description"], sRole["Type"]])
+        if not nothingFound:
+            return "```" + groupList.get_string(sortby="Name") + "```"
+        else:
+            return "```No other groups to unsubscribe from```"
+
+    args = message.content.split(' ', 1)[1]
+    args = args.strip()
+    args = args.lower()
+
+    for sRole in config["SubscribeRoles"]:
+        clean = sRole['Name'].strip()
+        clean = clean.lower()
+        if args == clean:
+            role = discord.utils.get(message.server.roles, name=sRole['Role'])
+            if role is None:
+                return message.author.mention + ", I can't find " + args
+            if not role in message.author.roles:
+                return message.author.mention + ", you're not subscribed to " + sRole['Name']
+            member = message.author
+            await bot.remove_roles(member,role) 
+            return message.author.mention + ", you're now unsubscribed from " + sRole['Name']
+    return message.author.mention + ", I can't find " + args
 
 async def schedule_sync():
     """Run-forever method to sync membership on a schedule"""
@@ -380,6 +492,7 @@ def check_killboard():
     if not noKillsList:
         logger.info('All characters had recent kills')
         return None
+    noKillsList.sort()
     paste_contents = '\n'.join(noKillsList)
     logger.info('Data being posted to pastebin: ' + paste_contents.replace('\n', ', '))
     r = requests.post('http://pastebin.com/api/api_post.php', data={
@@ -399,8 +512,8 @@ def check_killboard():
 if __name__ == '__main__':
     try:
         logger.info('Scheduling background tasks ...')
-        bot.loop.create_task(schedule_sync())
-        bot.loop.create_task(schedule_new_apps())
+        #bot.loop.create_task(schedule_sync())
+        #bot.loop.create_task(schedule_new_apps())
         bot.loop.create_task(schedule_killboard())
         # bot.loop.create_task(schedule_invalid_keys())
         logger.info('Starting run loop ...')
