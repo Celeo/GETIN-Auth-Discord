@@ -8,7 +8,7 @@
       "CONSOLE": 20,
       "FILE": 20
     },
-    "FILE": "log.txt"
+    "FILE": ""
   },
   "PRIVATE_COMMAND_CHANNELS": {
     "RECRUITMENT": {
@@ -23,5 +23,18 @@
   "URL_ROOT": "",
   "API_SECRET": "",
   "PASTEBIN_SECRET": "",
-  "PASTEBIN_USER_AGENT": ""
+  "PASTEBIN_USER_AGENT": "",
+  "SubscribeRoles":[
+		{
+			"Role":"",
+			"Name":"",
+			"Type":"",
+			"Description":""
+		}
+	],
+	"SubscribeBlacklistedChannels":[
+		{
+			"ID":""
+		}
+	]
 }
