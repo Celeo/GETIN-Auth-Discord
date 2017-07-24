@@ -4,7 +4,8 @@
     "LEVEL": {
       "ALL": 20,
       "CONSOLE": 20,
-      "FILE": 20
+      "FILE": 20,
+      "PYCORD": 20
     },
     "FILE": "log.txt"
   },

@@ -40,7 +40,7 @@ logger.addHandler(handler)
 bot = Pycord(
     config['TOKEN'],
     user_agent='GETIN-Auth-Discord (github.com/Celeo/GETIN-Auth-Discord, {__version__})',
-    logging_level=logging.WARNING
+    logging_level=config['LOGGING']['LEVEL']['PYCORD']
 )
 util = Util(
     bot,
@@ -103,9 +103,27 @@ def command_apps(data):
         bot.send_message(c, 'An error occurred in the processing of that command')
 
 
-logger.info('Connection to the socket')
+@bot.command('help')
+def command_help(data):
+    message = '''```GETIN-Auth Discord bot
+
+  !apps            Check apps
+  !sync            Member sync
+  !source          Get bot source
+  !schedule        Show update schedule
+  !subscribe       Subscribes to certain channels
+  !unsubscribe     Unsubscribes from channels
+  !help            Shows this message
+```'''
+    bot.send_message(data['d']['channel_id'], message)
+
+
+logger.info('Connecting to the socket')
 bot.connect_to_websocket()
-# logger.info('Starting scheduled events')
-# scheduler.run()
+logger.info('Connected')
+logger.info('Starting scheduled events')
+scheduler.run()
+logger.info('Started')
 logger.info('Going into run loop')
 bot.keep_running()
+logger.warning('Run loop exited; bot no longer running')
