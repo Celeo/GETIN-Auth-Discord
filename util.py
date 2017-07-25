@@ -146,7 +146,7 @@ class Util:
             corpHistoryJSON = corpHistory.json()
             hasBeenInCorp = False
             for j in corpHistoryJSON:
-                if j[0]['corporation_id'] == self.WORMBRO_CORP_ID:
+                if j['corporation_id'] == self.WORMBRO_CORP_ID:
                     if self.convert_to_zkill_date(j['start_date']) < self.get_last_month():
                         hasBeenInCorp = True
                         break
@@ -186,19 +186,20 @@ class Util:
             self.logger.info('All characters had recent kills')
             return None
         paste_contents = '\n'.join(noKillsList)
-        self.logger.info('Data being posted to pastebin: ' + paste_contents.replace('\n', ', '))
-        r = requests.post('http://pastebin.com/api/api_post.php', data={
-            'api_dev_key': self.config['PASTEBIN_SECRET'],
-            'api_paste_expire_date': '1D',
-            'api_option': 'paste',
-            'api_paste_private': '1',
-            'api_paste_code': paste_contents
-        })
-        if not r.status_code == 200:
-            raise Exception('POST to pastebin failed with status code {}. Contents of paste: {}'.format(r.status_code, paste_contents))
-        pastebin_link = r.text.replace('https://pastebin.com/', 'https://pastebin.com/raw/')
-        self.logger.info('Pastebin link is ' + pastebin_link)
-        return pastebin_link
+        self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], "**" + datetime.utcnow().strftime('%Y-%m-%d %H:%M' + "**"))
+
+        n = 1994
+        #Split the string
+        paste_list = paste_contents.split("\n")
+        split_entry = ""
+        for entry in paste_list:
+            if len(split_entry + entry) >= n:
+                self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], "```" + split_entry + "```")
+                split_entry = ""
+            else:
+                split_entry += entry + "\n"
+
+        return "```" + split_entry + "```"
 
     @classmethod
     def get_role_id(cls, roles, name):
