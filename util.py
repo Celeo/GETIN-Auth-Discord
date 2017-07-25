@@ -285,7 +285,12 @@ class Util:
             whitelist = []
             #Return the whitelist
             for j in self.config['ACTIVITY_WHITELIST']:
-                whitelist.append(j['NAME'] + " (" + str(j['EXPIRY TIME']) + " days left): " + j['DESCRIPTION'])
+                whitelistString = j['NAME'] + " ("
+                if j['EXPIRY TIME'] < (self.ACTIVITY_TIME_DAYS*-1):
+                    whitelistString += "PERMANENT): "
+                else:
+                    whitelistString += str(j['EXPIRY TIME']) + " days left): "
+                whitelist.append(whitelistString + j['DESCRIPTION'])
             whitelist.sort()
             if whitelist:
                 return "**Whitelist\n**```" + "\n".join(whitelist) + "```"
@@ -311,9 +316,11 @@ class Util:
 
         description = argList[1]
         time = argList[2]
-        if not time.isdigit():
+        try:
+            int(time)
+        except ValueError:
             return time + " is not a number!" 
-
+            
         timeNumber = int(time)
 
         jsonObject = {
@@ -322,8 +329,15 @@ class Util:
             "EXPIRY TIME":timeNumber
         }
 
+        returnString = "**Added entry**\n```Name: " + main + "\nDescription: " + description + "\nExpiry time (in days): "
+        if timeNumber <= 0:
+            jsonObject["EXPIRY TIME"] = (self.ACTIVITY_TIME_DAYS * -1) - 1
+            returnString += "PERMANENT" + "```" 
+        else:
+            returnString += str(timeNumber) + "```" 
+
         self.config['ACTIVITY_WHITELIST'].append(jsonObject)
         with open('config.json','w') as f:
             json.dump(self.config,f, indent=4)
 
-        return "**Added entry**\n```Name: " + main + "\nDescription: " + description + "\nExpiry time (in days): " + str(timeNumber) + "```" 
+        return returnString
