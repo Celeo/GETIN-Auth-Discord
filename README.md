@@ -1,4 +1,4 @@
-# GETIN-HR Discord bot
+# GETIN-Auth Discord bot
 
 This is a Discord bot that hooks into the GETIN-HR web application to run checks and validations on a schedule and give updates to recruiters from Discord.
 
