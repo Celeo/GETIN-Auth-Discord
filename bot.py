@@ -18,12 +18,13 @@ with open('config.json') as f:
 NEW_APPS_SLEEP_TIME = 900  # 15 minutes
 SYNC_SLEEP_TIME = 3600  # 1 hour
 KILLBOARD_SLEEP_TIME = 86400  # 1 day
-ACTIVITY_TIME_DAYS = 30
+ACTIVITY_TIME_DAYS = 30  # (roughly) 1 month
 ACTIVITY_WHITELIST = [
     'Celeo Servasse',
     'Alex Kommorov'
 ]
 WORMBRO_CORP_ID = 98134538
+WRONG_CHANNEL_MESSAGE = 'This command cannot be used from this channel'
 
 logger = logging.getLogger('getin-auth-discord')
 logger.setLevel(config['LOGGING']['LEVEL']['ALL'])
@@ -81,7 +82,7 @@ Check for killboard activity every {KILLBOARD_SLEEP_TIME // 3600} hours
 def command_sync(data):
     c = data['d']['channel_id']
     if not c == config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']:
-        bot.send_message(c, 'This command cannot be used from this channel')
+        bot.send_message(c, WRONG_CHANNEL_MESSAGE)
         return
     try:
         bot.send_message(c, util.sync())
@@ -94,13 +95,41 @@ def command_sync(data):
 def command_apps(data):
     c = data['d']['channel_id']
     if not c == config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']:
-        bot.send_message(c, 'This command cannot be used from this channel')
+        bot.send_message(c, WRONG_CHANNEL_MESSAGE)
         return
     try:
         bot.send_message(c, util.check_apps())
     except Exception as e:
         logger.error('Exception in !check_apps: ' + str(e))
         bot.send_message(c, 'An error occurred in the processing of that command')
+
+
+@bot.command('subscribe')
+def command_subscribe(data):
+    try:
+        message_channel = data['d']['channel_id']
+        blacklisted_channels = [c['ID'] for c in config['SUBSCRIBE_BLACKLISTED_CHANNELS']]
+        if message_channel not in blacklisted_channels:
+            bot.send_message(message_channel, util.subscribe(data))
+        else:
+            bot.send_message(message_channel, WRONG_CHANNEL_MESSAGE)
+    except Exception as e:
+        logger.error('Exception in !subscribe: ' + str(e))
+        bot.send_message(message_channel, 'An error occurred in the processing of that command')
+
+
+@bot.command('unsubscribe')
+def command_unsubscribe(data):
+    try:
+        message_channel = data['d']['channel_id']
+        blacklisted_channels = [c['ID'] for c in config['SUBSCRIBE_BLACKLISTED_CHANNELS']]
+        if message_channel not in blacklisted_channels:
+            bot.send_message(message_channel, util.unsubscribe(data))
+        else:
+            bot.send_message(message_channel, WRONG_CHANNEL_MESSAGE)
+    except Exception as e:
+        logger.error('Exception in !unsubscribe: ' + str(e))
+        bot.send_message(message_channel, 'An error occurred in the processing of that command')
 
 
 @bot.command('help')

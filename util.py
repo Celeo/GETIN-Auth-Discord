@@ -3,6 +3,7 @@ import sqlite3
 import re
 
 import requests
+from prettytable import PrettyTable
 
 
 class Util:
@@ -198,3 +199,81 @@ class Util:
         pastebin_link = r.text.replace('https://pastebin.com/', 'https://pastebin.com/raw/')
         self.logger.info('Pastebin link is ' + pastebin_link)
         return pastebin_link
+
+    @classmethod
+    def get_role_id(cls, roles, name):
+        return [e['id'] for e in roles if e['name'] == name][0]
+
+    def subscribe(self, data):
+        message = data['d']['content']
+        args = message.split(' ')[1:]
+        # note: this locks the bot to being for single-server use only (per bot account)
+        guild_id = self.bot.get_connected_guilds()[0]['id']
+        server_roles = self.bot.get_all_guild_roles(guild_id)
+        server_role_names = [r['name'] for r in server_roles]
+        member_id = data['d']['author']['id']
+        member_roles = self.bot.get_guild_member_by_id(guild_id, member_id)['roles']
+        if not args:
+            # return current groups
+            group_list = PrettyTable()
+            group_list.field_names = ['Name', 'Description', 'Type']
+            any_valid_roles = False
+            for role_node in self.config['SUBSCRIBE_ROLES']:
+                if role_node['NAME'] in server_role_names:
+                    role_node_id = Util.get_role_id(server_roles, role_node['NAME'])
+                    if role_node_id not in member_roles:
+                        any_valid_roles = True
+                        group_list.add_row([role_node['NAME'], role_node['DESCRIPTION'], role_node['TYPE']])
+            if any_valid_roles:
+                return '```' + group_list.get_string(sortby='Name') + '```'
+            else:
+                return '```No other groups to subscribe to```'
+        # subscribe to channel
+        role_join_name = args[0].lower()
+        for role_node in self.config['SUBSCRIBE_ROLES']:
+            if role_node['NAME'].lower() == role_join_name:
+                if role_node['NAME'] in server_role_names:
+                    role_node_id = Util.get_role_id(server_roles, role_node['NAME'])
+                    if role_node_id in member_roles:
+                        return '<@{}>, you\'re already subscribed to {}'.format(data['d']['author']['id'], role_node['NAME'])
+                    else:
+                        self.bot.add_member_roles(guild_id, member_id, [role_node_id])
+                        return '<@{}>, you\'re now subscribed to {}'.format(data['d']['author']['id'], role_node['NAME'])
+        return '<@{}>, I can\'t find "{}"'.format(data['d']['author']['id'], role_join_name)
+
+    def unsubscribe(self, data):
+        message = data['d']['content']
+        args = message.split(' ')[1:]
+        # note: this locks the bot to being for single-server use only (per bot account)
+        guild_id = self.bot.get_connected_guilds()[0]['id']
+        server_roles = self.bot.get_all_guild_roles(guild_id)
+        server_role_names = [r['name'] for r in server_roles]
+        member_id = data['d']['author']['id']
+        member_roles = self.bot.get_guild_member_by_id(guild_id, member_id)['roles']
+        if not args:
+            # return current groups
+            group_list = PrettyTable()
+            group_list.field_names = ['Name', 'Description', 'Type']
+            any_valid_roles = False
+            for role_node in self.config['SUBSCRIBE_ROLES']:
+                if role_node['NAME'] in server_role_names:
+                    role_node_id = Util.get_role_id(server_roles, role_node['NAME'])
+                    if role_node_id in member_roles:
+                        any_valid_roles = True
+                        group_list.add_row([role_node['NAME'], role_node['DESCRIPTION'], role_node['TYPE']])
+            if any_valid_roles:
+                return '```' + group_list.get_string(sortby='Name') + '```'
+            else:
+                return '```No other groups to unsubscribe from```'
+        # unsubscribe from channel
+        role_join_name = args[0].lower()
+        for role_node in self.config['SUBSCRIBE_ROLES']:
+            if role_node['NAME'].lower() == role_join_name:
+                if role_node['NAME'] in server_role_names:
+                    role_node_id = Util.get_role_id(server_roles, role_node['NAME'])
+                    if role_node_id not in member_roles:
+                        return '<@{}>, you\'re not subscribed to {}'.format(data['d']['author']['id'], role_node['NAME'])
+                    else:
+                        self.bot.remove_member_roles(guild_id, member_id, [role_node_id])
+                        return '<@{}>, you\'re now unsubscribed from {}'.format(data['d']['author']['id'], role_node['NAME'])
+        return '<@{}>, I can\'t find "{}"'.format(data['d']['author']['id'], role_join_name)
