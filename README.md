@@ -15,7 +15,7 @@ $ pip install -r requirements.txt
 $ cp config.json.example config.json
 ```
 
-Fill in the configuration.
+Fill in the configuration. To run:
 
 ```bash
 $ python bot.py
