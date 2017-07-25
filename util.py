@@ -154,6 +154,23 @@ class Util:
         activity_whitelist = [e['NAME'] for e in self.config['ACTIVITY_WHITELIST']]
         for index, name in enumerate(mains):
             if name in activity_whitelist:
+                for index in range(len(self.config['ACTIVITY_WHITELIST'])):
+                    char = self.config['ACTIVITY_WHITELIST'][index]
+                    if name == char["NAME"]:
+                        if char['EXPIRY TIME'] < self.ACTIVITY_TIME_DAYS * -1:
+                            #Permanent
+                            self.logger.info(name + ' is permanently on the whitelist! Continuing ...')
+                        else:
+                            #Not permanent
+                            #Remove from whitelist
+                            if char['EXPIRY TIME'] - 1 < self.ACTIVITY_TIME_DAYS * -1:
+                                self.config['ACTIVITY_WHITELIST'].pop(index)
+                                self.logger.info(name + ' has been removed from the whitelist! Continuing ...')
+                            else:
+                                self.config['ACTIVITY_WHITELIST'][index]['EXPIRY TIME'] -= 1
+                                self.logger.info(name + ' has gotten 1 day reduced from his / her whitelist time, but remains on it! Continuing ...')
+                        break
+
                 continue
 
             # check if person has been in corp for a month
@@ -205,6 +222,9 @@ class Util:
         if not noKillsList:
             self.logger.info('All characters had recent kills')
             return None
+
+        with open('config.json','w') as f:
+            json.dump(self.config,f, indent=4)
 
         noKillsList.sort()
         paste_contents = '\n'.join(noKillsList)
@@ -288,6 +308,8 @@ class Util:
                 whitelistString = j['NAME'] + " ("
                 if j['EXPIRY TIME'] < (self.ACTIVITY_TIME_DAYS*-1):
                     whitelistString += "PERMANENT): "
+                elif j['EXPIRY TIME'] <= 0:
+                    continue
                 else:
                     whitelistString += str(j['EXPIRY TIME']) + " days left): "
                 whitelist.append(whitelistString + j['DESCRIPTION'])
