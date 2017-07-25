@@ -183,6 +183,8 @@ class Util:
         if not noKillsList:
             self.logger.info('All characters had recent kills')
             return None
+
+        noKillsList.sort()
         paste_contents = '\n'.join(noKillsList)
         self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], "**" + datetime.utcnow().strftime('%Y-%m-%d %H:%M' + "**"))
 
