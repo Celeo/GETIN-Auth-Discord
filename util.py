@@ -3,8 +3,6 @@ import sqlite3
 import re
 
 import requests
-from prettytable import PrettyTable
-
 
 class Util:
 
@@ -218,17 +216,19 @@ class Util:
         member_roles = self.bot.get_guild_member_by_id(guild_id, member_id)['roles']
         if not args:
             # return current groups request
-            group_list = PrettyTable()
-            group_list.field_names = ['Name', 'Description', 'Type']
-            any_valid_roles = False
+            group_list =[]
             for role_node in self.config['SUBSCRIBE_ROLES']:
                 if role_node['NAME'] in server_role_names:
                     role_node_id = Util.get_role_id(server_roles, role_node['NAME'])
                     if (role_node_id in member_roles) != is_subscribing:
                         any_valid_roles = True
-                        group_list.add_row([role_node['NAME'], role_node['DESCRIPTION'], role_node['TYPE']])
-            if any_valid_roles:
-                return '```' + group_list.get_string(sortby='Name') + '```'
+                        group_list.append(role_node['NAME'] + " (" + role_node['TYPE'] +"): " +  role_node['DESCRIPTION'] + "\n")
+            if group_list:
+                group_list.sort()
+                stringGroup = ""
+                for group in group_list:
+                    stringGroup += group
+                return '```NAME (TYPE): DESCRIPTION\n\n' + stringGroup + '```'
             else:
                 return f'```No other groups to {str_action_direction_now}```'
         # role management request
