@@ -108,8 +108,7 @@ def command_apps(data):
 def command_subscribe(data):
     try:
         message_channel = data['d']['channel_id']
-        blacklisted_channels = [c['ID'] for c in config['SUBSCRIBE_BLACKLISTED_CHANNELS']]
-        if message_channel not in blacklisted_channels:
+        if message_channel in config['SUBSCRIBE_WHITELISTED_CHANNELS']:
             bot.send_message(message_channel, util.subscribe(data))
         else:
             bot.send_message(message_channel, WRONG_CHANNEL_MESSAGE)
@@ -122,8 +121,7 @@ def command_subscribe(data):
 def command_unsubscribe(data):
     try:
         message_channel = data['d']['channel_id']
-        blacklisted_channels = [c['ID'] for c in config['SUBSCRIBE_BLACKLISTED_CHANNELS']]
-        if message_channel not in blacklisted_channels:
+        if message_channel in config['SUBSCRIBE_WHITELISTED_CHANNELS']:
             bot.send_message(message_channel, util.unsubscribe(data))
         else:
             bot.send_message(message_channel, WRONG_CHANNEL_MESSAGE)
