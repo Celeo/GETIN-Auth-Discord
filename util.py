@@ -171,7 +171,7 @@ class Util:
             self.logger.info('Making killboard request to {}'.format(request_url))
             r = requests.get(request_url, headers={
                 'Accept-Encoding': 'gzip',
-                'User-Agent': 'Maintainer: ' + self.config['PASTEBIN_USER_AGENT']
+                'User-Agent': 'Maintainer: ' + self.config['ZKILL_USER_AGENT']
             })
             if r.status_code != 200:
                 self.logger.error('Got status code {} from {}'.format(r.status_code, request_url))
