@@ -9,7 +9,7 @@ from util import Util
 from scheduler import Scheduler
 
 
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 
 with open('config.json') as f:
     config = json.load(f)
@@ -19,10 +19,6 @@ NEW_APPS_SLEEP_TIME = 900  # 15 minutes
 SYNC_SLEEP_TIME = 3600  # 1 hour
 KILLBOARD_SLEEP_TIME = 86400  # 1 day
 ACTIVITY_TIME_DAYS = 30  # (roughly) 1 month
-ACTIVITY_WHITELIST = [
-    'Celeo Servasse',
-    'Alex Kommorov'
-]
 WORMBRO_CORP_ID = 98134538
 WRONG_CHANNEL_MESSAGE = 'This command cannot be used from this channel'
 
@@ -48,7 +44,6 @@ util = Util(
     config,
     logger,
     ACTIVITY_TIME_DAYS,
-    ACTIVITY_WHITELIST,
     WORMBRO_CORP_ID
 )
 scheduler = Scheduler(
@@ -108,8 +103,7 @@ def command_apps(data):
 def command_subscribe(data):
     try:
         message_channel = data['d']['channel_id']
-        blacklisted_channels = [c['ID'] for c in config['SUBSCRIBE_BLACKLISTED_CHANNELS']]
-        if message_channel not in blacklisted_channels:
+        if message_channel in config['SUBSCRIBE_WHITELISTED_CHANNELS']:
             bot.send_message(message_channel, util.subscribe(data))
         else:
             bot.send_message(message_channel, WRONG_CHANNEL_MESSAGE)
@@ -122,13 +116,25 @@ def command_subscribe(data):
 def command_unsubscribe(data):
     try:
         message_channel = data['d']['channel_id']
-        blacklisted_channels = [c['ID'] for c in config['SUBSCRIBE_BLACKLISTED_CHANNELS']]
-        if message_channel not in blacklisted_channels:
+        if message_channel in config['SUBSCRIBE_WHITELISTED_CHANNELS']:
             bot.send_message(message_channel, util.unsubscribe(data))
         else:
             bot.send_message(message_channel, WRONG_CHANNEL_MESSAGE)
     except Exception as e:
         logger.error('Exception in !unsubscribe: ' + str(e))
+        bot.send_message(message_channel, 'An error occurred in the processing of that command')
+
+
+@bot.command('whitelist')
+def command_whitelist(data):
+    try:
+        message_channel = data['d']['channel_id']
+        if message_channel in config['PRIVATE_COMMAND_CHANNELS']['ACTIVITY_MODERATION']:
+            bot.send_message(message_channel, util.whitelist(data))
+        else:
+            bot.send_message(message_channel, WRONG_CHANNEL_MESSAGE)
+    except Exception as e:
+        logger.error('Exception in !whitelist: ' + str(e))
         bot.send_message(message_channel, 'An error occurred in the processing of that command')
 
 
@@ -143,6 +149,7 @@ def command_help(data):
   !subscribe       Subscribes to certain channels
   !unsubscribe     Unsubscribes from channels
   !help            Shows this message
+  !whitelist       Whitelist a player for the killboard check
 ```'''
     bot.send_message(data['d']['channel_id'], message)
 

@@ -1,7 +1,6 @@
 certifi==2017.4.17
 chardet==3.0.4
 idna==2.5
-prettytable==0.7.2
 PycordLib==1.2.1
 requests==2.18.1
 schedule==0.4.3

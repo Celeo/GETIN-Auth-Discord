@@ -1,19 +1,17 @@
 from datetime import datetime, timedelta
 import sqlite3
 import re
+import json
 
 import requests
-from prettytable import PrettyTable
-
 
 class Util:
 
-    def __init__(self, bot, config, logger, ACTIVITY_TIME_DAYS, ACTIVITY_WHITELIST, WORMBRO_CORP_ID):
+    def __init__(self, bot, config, logger, ACTIVITY_TIME_DAYS, WORMBRO_CORP_ID):
         self.bot = bot
         self.config = config
         self.logger = logger
         self.ACTIVITY_TIME_DAYS = ACTIVITY_TIME_DAYS
-        self.ACTIVITY_WHITELIST = ACTIVITY_WHITELIST
         self.WORMBRO_CORP_ID = WORMBRO_CORP_ID
 
     def sync(self):
@@ -108,6 +106,26 @@ class Util:
         connection.close()
         return [e[0] for e in data]
 
+    def is_main_valid(self, character):
+        """Checks if the character name is valid
+
+        Args:
+            character (str): character name
+
+        Returns:
+            boolean: is main valid?
+        """
+        connection = sqlite3.connect('../getin-auth/data.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT character_name FROM member WHERE lower(character_name) = ?", (character.lower(), ))
+        data = cursor.fetchall()
+        entries = True
+        if not data:
+            entries = False
+
+        connection.close()
+        return entries
+
     def convert_to_zkill_date(self, esiDate):
         """Converts EvE ESI date to EvE Zkillboard date
 
@@ -132,8 +150,29 @@ class Util:
         if not mains:
             self.logger.warning('No mains in the database!')
             return None
+
+        activity_whitelist = [e['NAME'] for e in self.config['ACTIVITY_WHITELIST']]
         for index, name in enumerate(mains):
-            if name in self.ACTIVITY_WHITELIST:
+            if name in activity_whitelist:
+                for index in range(len(self.config['ACTIVITY_WHITELIST'])):
+                    char = self.config['ACTIVITY_WHITELIST'][index]
+                    if name == char["NAME"]:
+                        if char['EXPIRY TIME'] < self.ACTIVITY_TIME_DAYS * -1:
+                            #Permanent
+                            self.logger.info(name + ' is permanently on the whitelist! Continuing ...')
+                        else:
+                            """
+                            Not permanent
+                            Remove from whitelist
+                            """
+                            if char['EXPIRY TIME'] - 1 < self.ACTIVITY_TIME_DAYS * -1:
+                                self.config['ACTIVITY_WHITELIST'].pop(index)
+                                self.logger.info(name + ' has been removed from the whitelist! Continuing ...')
+                            else:
+                                self.config['ACTIVITY_WHITELIST'][index]['EXPIRY TIME'] -= 1
+                                self.logger.info(name + ' has gotten 1 day reduced from his / her whitelist time, but remains on it! Continuing ...')
+                        break
+
                 continue
 
             # check if person has been in corp for a month
@@ -146,7 +185,7 @@ class Util:
             corpHistoryJSON = corpHistory.json()
             hasBeenInCorp = False
             for j in corpHistoryJSON:
-                if j[0]['corporation_id'] == self.WORMBRO_CORP_ID:
+                if j['corporation_id'] == self.WORMBRO_CORP_ID:
                     if self.convert_to_zkill_date(j['start_date']) < self.get_last_month():
                         hasBeenInCorp = True
                         break
@@ -173,7 +212,7 @@ class Util:
             self.logger.info('Making killboard request to {}'.format(request_url))
             r = requests.get(request_url, headers={
                 'Accept-Encoding': 'gzip',
-                'User-Agent': 'Maintainer: ' + self.config['PASTEBIN_USER_AGENT']
+                'User-Agent': 'Maintainer: ' + self.config['ZKILL_USER_AGENT']
             })
             if r.status_code != 200:
                 self.logger.error('Got status code {} from {}'.format(r.status_code, request_url))
@@ -185,20 +224,26 @@ class Util:
         if not noKillsList:
             self.logger.info('All characters had recent kills')
             return None
+
+        with open('config.json', 'w') as f:
+            json.dump(self.config, f, indent=4)
+
+        noKillsList.sort()
         paste_contents = '\n'.join(noKillsList)
-        self.logger.info('Data being posted to pastebin: ' + paste_contents.replace('\n', ', '))
-        r = requests.post('http://pastebin.com/api/api_post.php', data={
-            'api_dev_key': self.config['PASTEBIN_SECRET'],
-            'api_paste_expire_date': '1D',
-            'api_option': 'paste',
-            'api_paste_private': '1',
-            'api_paste_code': paste_contents
-        })
-        if not r.status_code == 200:
-            raise Exception('POST to pastebin failed with status code {}. Contents of paste: {}'.format(r.status_code, paste_contents))
-        pastebin_link = r.text.replace('https://pastebin.com/', 'https://pastebin.com/raw/')
-        self.logger.info('Pastebin link is ' + pastebin_link)
-        return pastebin_link
+        self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], "**" + datetime.utcnow().strftime('%Y-%m-%d %H:%M' + "**"))
+
+        n = 1994
+        #Split the string
+        paste_list = paste_contents.split("\n")
+        split_entry = ""
+        for entry in paste_list:
+            if len(split_entry + entry) >= n:
+                self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], "```" + split_entry + "```")
+                split_entry = ""
+            else:
+                split_entry += entry + "\n"
+
+        return "```" + split_entry + "```"
 
     @classmethod
     def get_role_id(cls, roles, name):
@@ -217,21 +262,23 @@ class Util:
         member_roles = self.bot.get_guild_member_by_id(guild_id, member_id)['roles']
         if not args:
             # return current groups request
-            group_list = PrettyTable()
-            group_list.field_names = ['Name', 'Description', 'Type']
-            any_valid_roles = False
+            group_list = []
             for role_node in self.config['SUBSCRIBE_ROLES']:
                 if role_node['NAME'] in server_role_names:
                     role_node_id = Util.get_role_id(server_roles, role_node['NAME'])
                     if (role_node_id in member_roles) != is_subscribing:
                         any_valid_roles = True
-                        group_list.add_row([role_node['NAME'], role_node['DESCRIPTION'], role_node['TYPE']])
-            if any_valid_roles:
-                return '```' + group_list.get_string(sortby='Name') + '```'
+                        group_list.append(role_node['NAME'] + " (" + role_node['TYPE'] +"): " +  role_node['DESCRIPTION'] + "\n")
+            if group_list:
+                group_list.sort()
+                stringGroup = ""
+                for group in group_list:
+                    stringGroup += group
+                return '```NAME (TYPE): DESCRIPTION\n\n' + stringGroup + '```'
             else:
                 return f'```No other groups to {str_action_direction_now}```'
         # role management request
-        role_join_name = args[0].lower()
+        role_join_name = " ".join(args).lower()
         for role_node in self.config['SUBSCRIBE_ROLES']:
             if role_node['NAME'].lower() == role_join_name:
                 if role_node['NAME'] in server_role_names:
@@ -251,3 +298,70 @@ class Util:
 
     def unsubscribe(self, data):
         return self._handle_subscription(data, False)
+
+    def whitelist(self, data):
+        argumentAmount = 3
+        message = data['d']['content']
+
+        if len(message.split(' ')[1:]) == 0:
+            whitelist = []
+            #Return the whitelist
+            for j in self.config['ACTIVITY_WHITELIST']:
+                whitelistString = j['NAME'] + " ("
+                if j['EXPIRY TIME'] < (self.ACTIVITY_TIME_DAYS*-1):
+                    whitelistString += "PERMANENT): "
+                elif j['EXPIRY TIME'] <= 0:
+                    continue
+                else:
+                    whitelistString += str(j['EXPIRY TIME']) + " days left): "
+                whitelist.append(whitelistString + j['DESCRIPTION'])
+            whitelist.sort()
+            if whitelist:
+                return "**Whitelist\n**```" + "\n".join(whitelist) + "```"
+            else:
+                return "**Whitelist\n**```No one in the whitelist!" + "```"
+
+        args = message.split(' ', 1)[1]
+        argList = args.split('|')
+        argList = [e.strip() for e in argList]
+        #Check if there are enough arguments
+        if len(argList) < argumentAmount:
+            return "Too few arguments!"
+        elif len(argList) > argumentAmount:
+            return "Too many arguments!"
+
+        main = argList[0]
+        if not self.is_main_valid(main):
+            return main + " is not a valid main!"
+
+        whitelist_lower = [e['NAME'].lower() for e in self.config['ACTIVITY_WHITELIST']]
+        if main.lower() in whitelist_lower:
+            return main + " is already in the whitelist!"
+
+        description = argList[1]
+        time = argList[2]
+        try:
+            int(time)
+        except ValueError:
+            return time + " is not a number!" 
+
+        timeNumber = int(time)
+
+        jsonObject = {
+            "NAME": main,
+            "DESCRIPTION": description,
+            "EXPIRY TIME": timeNumber
+        }
+
+        returnString = "**Added entry**\n```Name: " + main + "\nDescription: " + description + "\nExpiry time (in days): "
+        if timeNumber <= 0:
+            jsonObject["EXPIRY TIME"] = (self.ACTIVITY_TIME_DAYS * -1) - 1
+            returnString += "PERMANENT" + "```"
+        else:
+            returnString += str(timeNumber) + "```"
+
+        self.config['ACTIVITY_WHITELIST'].append(jsonObject)
+        with open('config.json', 'w') as f:
+            json.dump(self.config, f, indent=4)
+
+        return returnString
