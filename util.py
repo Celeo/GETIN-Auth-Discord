@@ -25,7 +25,7 @@ class Util:
             if not js['existing_members'] and not js['new_members'] and not js['left_members']:
                 message = 'No membership changes'
                 self.logger.info(message)
-                return message
+                return None
             return 'Existing members added to roster: {}\nAccepted applicants: {}\nCharacters who left the corp: {}'.format(
                 ', '.join(js['existing_members'] or ('None', )),
                 ', '.join(js['new_members'] or ('None', )),
@@ -48,8 +48,7 @@ class Util:
             js = r.json()
             if js:
                 return 'New applications: ' + ', '.join(js)
-            else:
-                return 'No new applications'
+            return None
         except Exception as e:
             self.logger.error('Exception in schedule_new_apps: ' + str(e))
             return 'Error!'

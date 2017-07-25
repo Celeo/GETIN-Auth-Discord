@@ -15,15 +15,21 @@ class Scheduler(Thread):
 
     def check_apps(self):
         self.util.logger.info('Scheduler: check_apps()')
-        self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], self.util.check_apps())
+        res = self.util.check_apps()
+        if res:
+            self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], res)
 
     def sync(self):
         self.util.logger.info('Scheduler: sync()')
-        self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], self.util.sync())
+        res = self.util.sync()
+        if res:
+            self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], res)
 
     def killboard(self):
         self.util.logger.info('Scheduler: killboard()')
-        self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], self.util.check_killboard())
+        res = self.util.check_killboard()
+        if res:
+            self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], res)
 
     def run(self):
         while True:
