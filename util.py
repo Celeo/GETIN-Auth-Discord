@@ -232,7 +232,7 @@ class Util:
             else:
                 return f'```No other groups to {str_action_direction_now}```'
         # role management request
-        role_join_name = args[0].lower()
+        role_join_name = " ".join(args).lower()
         for role_node in self.config['SUBSCRIBE_ROLES']:
             if role_node['NAME'].lower() == role_join_name:
                 if role_node['NAME'] in server_role_names:
