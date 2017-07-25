@@ -1,17 +1,17 @@
 from datetime import datetime, timedelta
 import sqlite3
 import re
+import json
 
 import requests
 
 class Util:
 
-    def __init__(self, bot, config, logger, ACTIVITY_TIME_DAYS, ACTIVITY_WHITELIST, WORMBRO_CORP_ID):
+    def __init__(self, bot, config, logger, ACTIVITY_TIME_DAYS, WORMBRO_CORP_ID):
         self.bot = bot
         self.config = config
         self.logger = logger
         self.ACTIVITY_TIME_DAYS = ACTIVITY_TIME_DAYS
-        self.ACTIVITY_WHITELIST = ACTIVITY_WHITELIST
         self.WORMBRO_CORP_ID = WORMBRO_CORP_ID
 
     def sync(self):
@@ -106,6 +106,26 @@ class Util:
         connection.close()
         return [e[0] for e in data]
 
+    def is_main_valid(self,character):
+        """Checks if the character name is valid
+
+        Args:
+            character (str): character name
+
+        Returns:
+            boolean: is main valid?
+        """
+        connection = sqlite3.connect('../getin-auth/data.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT character_name FROM member WHERE lower(character_name) = ?", (character.lower(), ))
+        data = cursor.fetchall()
+        entries = True
+        if not data:
+            entries = False
+
+        connection.close()
+        return entries
+
     def convert_to_zkill_date(self, esiDate):
         """Converts EvE ESI date to EvE Zkillboard date
 
@@ -130,8 +150,10 @@ class Util:
         if not mains:
             self.logger.warning('No mains in the database!')
             return None
+
+        activity_whitelist = [e['NAME'] for e in self.config['ACTIVITY_WHITELIST']]
         for index, name in enumerate(mains):
-            if name in self.ACTIVITY_WHITELIST:
+            if name in activity_whitelist:
                 continue
 
             # check if person has been in corp for a month
@@ -254,3 +276,54 @@ class Util:
 
     def unsubscribe(self, data):
         return self._handle_subscription(data, False)
+
+    def whitelist(self, data):
+        argumentAmount = 3
+        message = data['d']['content']
+
+        if len(message.split(' ')[1:]) == 0:
+            whitelist = []
+            #Return the whitelist
+            for j in self.config['ACTIVITY_WHITELIST']:
+                whitelist.append(j['NAME'] + " (" + str(j['EXPIRY TIME']) + " days left): " + j['DESCRIPTION'])
+            whitelist.sort()
+            if whitelist:
+                return "**Whitelist\n**```" + "\n".join(whitelist) + "```"
+            else:
+                return "**Whitelist\n**```No one in the whitelist!" + "```"
+
+        args = message.split(' ',1)[1]
+        argList = args.split('|')
+        argList = [e.strip() for e in argList]
+        #Check if there are enough arguments
+        if len(argList) < argumentAmount:
+            return "Too few arguments!"
+        elif len(argList) > argumentAmount:
+            return "Too many arguments!"
+
+        main = argList[0]
+        if not self.is_main_valid(main):
+            return main + " is not a valid main!"
+
+        whitelist_lower = [e['NAME'].lower() for e in self.config['ACTIVITY_WHITELIST']]
+        if main.lower() in whitelist_lower:
+            return main + " is already in the whitelist!"
+
+        description = argList[1]
+        time = argList[2]
+        if not time.isdigit():
+            return time + " is not a number!" 
+
+        timeNumber = int(time)
+
+        jsonObject = {
+            "NAME":main,
+            "DESCRIPTION":description,
+            "EXPIRY TIME":timeNumber
+        }
+
+        self.config['ACTIVITY_WHITELIST'].append(jsonObject)
+        with open('config.json','w') as f:
+            json.dump(self.config,f, indent=4)
+
+        return "**Added entry**\n```Name: " + main + "\nDescription: " + description + "\nExpiry time (in days): " + str(timeNumber) + "```" 
