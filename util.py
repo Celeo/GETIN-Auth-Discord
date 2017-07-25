@@ -360,6 +360,6 @@ class Util:
 
         self.config['ACTIVITY_WHITELIST'].append(jsonObject)
         with open('config.json','w') as f:
-            json.dump(self.config,f,indent=4)
+            json.dump(self.config, f, indent=4)
 
         return returnString
