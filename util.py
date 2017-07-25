@@ -5,6 +5,7 @@ import json
 
 import requests
 
+
 class Util:
 
     def __init__(self, bot, config, logger, ACTIVITY_TIME_DAYS, WORMBRO_CORP_ID):
@@ -158,7 +159,7 @@ class Util:
                     char = self.config['ACTIVITY_WHITELIST'][index]
                     if name == char["NAME"]:
                         if char['EXPIRY TIME'] < self.ACTIVITY_TIME_DAYS * -1:
-                            #Permanent
+                            # permanent
                             self.logger.info(name + ' is permanently on the whitelist! Continuing ...')
                         else:
                             """
@@ -230,20 +231,20 @@ class Util:
 
         noKillsList.sort()
         paste_contents = '\n'.join(noKillsList)
-        self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], "**" + datetime.utcnow().strftime('%Y-%m-%d %H:%M' + "**"))
+        self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], '**' + datetime.utcnow().strftime('%Y-%m-%d %H:%M' + '**'))
 
         n = 1994
-        #Split the string
-        paste_list = paste_contents.split("\n")
-        split_entry = ""
+        # split the string
+        paste_list = paste_contents.split('\n')
+        split_entry = ''
         for entry in paste_list:
             if len(split_entry + entry) >= n:
-                self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], "```" + split_entry + "```")
-                split_entry = ""
+                self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], '```' + split_entry + '```')
+                split_entry = ''
             else:
-                split_entry += entry + "\n"
+                split_entry += entry + '\n'
 
-        return "```" + split_entry + "```"
+        return '```' + split_entry + '```'
 
     @classmethod
     def get_role_id(cls, roles, name):
@@ -267,18 +268,17 @@ class Util:
                 if role_node['NAME'] in server_role_names:
                     role_node_id = Util.get_role_id(server_roles, role_node['NAME'])
                     if (role_node_id in member_roles) != is_subscribing:
-                        any_valid_roles = True
-                        group_list.append(role_node['NAME'] + " (" + role_node['TYPE'] +"): " +  role_node['DESCRIPTION'] + "\n")
+                        group_list.append(role_node['NAME'] + ' (' + role_node['TYPE'] + '): ' + role_node['DESCRIPTION'] + '\n')
             if group_list:
                 group_list.sort()
-                stringGroup = ""
+                stringGroup = ''
                 for group in group_list:
                     stringGroup += group
                 return '```NAME (TYPE): DESCRIPTION\n\n' + stringGroup + '```'
             else:
                 return f'```No other groups to {str_action_direction_now}```'
         # role management request
-        role_join_name = " ".join(args).lower()
+        role_join_name = ' '.join(args).lower()
         for role_node in self.config['SUBSCRIBE_ROLES']:
             if role_node['NAME'].lower() == role_join_name:
                 if role_node['NAME'] in server_role_names:
@@ -300,68 +300,68 @@ class Util:
         return self._handle_subscription(data, False)
 
     def whitelist(self, data):
-        argumentAmount = 3
+        argument_amount = 3
         message = data['d']['content']
 
         if len(message.split(' ')[1:]) == 0:
             whitelist = []
-            #Return the whitelist
+            # return the whitelist
             for j in self.config['ACTIVITY_WHITELIST']:
-                whitelistString = j['NAME'] + " ("
-                if j['EXPIRY TIME'] < (self.ACTIVITY_TIME_DAYS*-1):
-                    whitelistString += "PERMANENT): "
+                whitelistString = j['NAME'] + ' ('
+                if j['EXPIRY TIME'] < (self.ACTIVITY_TIME_DAYS * -1):
+                    whitelistString += 'PERMANENT): '
                 elif j['EXPIRY TIME'] <= 0:
                     continue
                 else:
-                    whitelistString += str(j['EXPIRY TIME']) + " days left): "
+                    whitelistString += str(j['EXPIRY TIME']) + ' days left): '
                 whitelist.append(whitelistString + j['DESCRIPTION'])
             whitelist.sort()
             if whitelist:
-                return "**Whitelist\n**```" + "\n".join(whitelist) + "```"
+                return '**Whitelist\n**```' + '\n'.join(whitelist) + '```'
             else:
-                return "**Whitelist\n**```No one in the whitelist!" + "```"
+                return '**Whitelist\n**```No one in the whitelist!' + '```'
 
         args = message.split(' ', 1)[1]
-        argList = args.split('|')
-        argList = [e.strip() for e in argList]
-        #Check if there are enough arguments
-        if len(argList) < argumentAmount:
-            return "Too few arguments!"
-        elif len(argList) > argumentAmount:
-            return "Too many arguments!"
+        arg_list = args.split('|')
+        arg_list = [e.strip() for e in arg_list]
+        # check if there are enough arguments
+        if len(arg_list) < argument_amount:
+            return 'Too few arguments!'
+        elif len(arg_list) > argument_amount:
+            return 'Too many arguments!'
 
-        main = argList[0]
+        main = arg_list[0]
         if not self.is_main_valid(main):
-            return main + " is not a valid main!"
+            return main + ' is not a valid main!'
 
         whitelist_lower = [e['NAME'].lower() for e in self.config['ACTIVITY_WHITELIST']]
         if main.lower() in whitelist_lower:
-            return main + " is already in the whitelist!"
+            return main + ' is already in the whitelist!'
 
-        description = argList[1]
-        time = argList[2]
+        description = arg_list[1]
+        time = arg_list[2]
         try:
             int(time)
         except ValueError:
-            return time + " is not a number!" 
+            return time + ' is not a number!'
 
         timeNumber = int(time)
 
         jsonObject = {
-            "NAME": main,
-            "DESCRIPTION": description,
-            "EXPIRY TIME": timeNumber
+            'NAME': main,
+            'DESCRIPTION': description,
+            'EXPIRY TIME': timeNumber
         }
 
-        returnString = "**Added entry**\n```Name: " + main + "\nDescription: " + description + "\nExpiry time (in days): "
+        return_string = '**Added entry**\n```Name: ' + main + '\nDescription: ' + description + '\nExpiry time (in days): '
         if timeNumber <= 0:
-            jsonObject["EXPIRY TIME"] = (self.ACTIVITY_TIME_DAYS * -1) - 1
-            returnString += "PERMANENT" + "```"
+            jsonObject['EXPIRY TIME'] = (self.ACTIVITY_TIME_DAYS * -1) - 1
+            return_string += 'PERMANENT' + '```'
         else:
-            returnString += str(timeNumber) + "```"
+            return_string += str(timeNumber) + '```'
 
         self.config['ACTIVITY_WHITELIST'].append(jsonObject)
         with open('config.json', 'w') as f:
             json.dump(self.config, f, indent=4)
 
-        return returnString
+        return return_string
