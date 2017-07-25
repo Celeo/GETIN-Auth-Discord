@@ -124,6 +124,7 @@ def command_unsubscribe(data):
         logger.error('Exception in !unsubscribe: ' + str(e))
         bot.send_message(message_channel, 'An error occurred in the processing of that command')
 
+
 @bot.command('whitelist')
 def command_whitelist(data):
     try:
@@ -135,6 +136,7 @@ def command_whitelist(data):
     except Exception as e:
         logger.error('Exception in !whitelist: ' + str(e))
         bot.send_message(message_channel, 'An error occurred in the processing of that command')
+
 
 @bot.command('help')
 def command_help(data):

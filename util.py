@@ -106,7 +106,7 @@ class Util:
         connection.close()
         return [e[0] for e in data]
 
-    def is_main_valid(self,character):
+    def is_main_valid(self, character):
         """Checks if the character name is valid
 
         Args:
@@ -161,8 +161,10 @@ class Util:
                             #Permanent
                             self.logger.info(name + ' is permanently on the whitelist! Continuing ...')
                         else:
-                            #Not permanent
-                            #Remove from whitelist
+                            """
+                            Not permanent
+                            Remove from whitelist
+                            """
                             if char['EXPIRY TIME'] - 1 < self.ACTIVITY_TIME_DAYS * -1:
                                 self.config['ACTIVITY_WHITELIST'].pop(index)
                                 self.logger.info(name + ' has been removed from the whitelist! Continuing ...')
@@ -223,8 +225,8 @@ class Util:
             self.logger.info('All characters had recent kills')
             return None
 
-        with open('config.json','w') as f:
-            json.dump(self.config,f, indent=4)
+        with open('config.json', 'w') as f:
+            json.dump(self.config, f, indent=4)
 
         noKillsList.sort()
         paste_contents = '\n'.join(noKillsList)
@@ -260,7 +262,7 @@ class Util:
         member_roles = self.bot.get_guild_member_by_id(guild_id, member_id)['roles']
         if not args:
             # return current groups request
-            group_list =[]
+            group_list = []
             for role_node in self.config['SUBSCRIBE_ROLES']:
                 if role_node['NAME'] in server_role_names:
                     role_node_id = Util.get_role_id(server_roles, role_node['NAME'])
@@ -319,7 +321,7 @@ class Util:
             else:
                 return "**Whitelist\n**```No one in the whitelist!" + "```"
 
-        args = message.split(' ',1)[1]
+        args = message.split(' ', 1)[1]
         argList = args.split('|')
         argList = [e.strip() for e in argList]
         #Check if there are enough arguments
@@ -342,24 +344,24 @@ class Util:
             int(time)
         except ValueError:
             return time + " is not a number!" 
-            
+
         timeNumber = int(time)
 
         jsonObject = {
-            "NAME":main,
-            "DESCRIPTION":description,
-            "EXPIRY TIME":timeNumber
+            "NAME": main,
+            "DESCRIPTION": description,
+            "EXPIRY TIME": timeNumber
         }
 
         returnString = "**Added entry**\n```Name: " + main + "\nDescription: " + description + "\nExpiry time (in days): "
         if timeNumber <= 0:
             jsonObject["EXPIRY TIME"] = (self.ACTIVITY_TIME_DAYS * -1) - 1
-            returnString += "PERMANENT" + "```" 
+            returnString += "PERMANENT" + "```"
         else:
-            returnString += str(timeNumber) + "```" 
+            returnString += str(timeNumber) + "```"
 
         self.config['ACTIVITY_WHITELIST'].append(jsonObject)
-        with open('config.json','w') as f:
+        with open('config.json', 'w') as f:
             json.dump(self.config, f, indent=4)
 
         return returnString
