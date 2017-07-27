@@ -15,7 +15,7 @@ class Util:
         self.ACTIVITY_TIME_DAYS = ACTIVITY_TIME_DAYS
         self.WORMBRO_CORP_ID = WORMBRO_CORP_ID
 
-    def sync(self):
+    def sync(self, from_scheduler=False):
         """Makes an API request to the server to sync membership"""
         try:
             r = requests.get(self.config['URL_ROOT'] + 'sync', headers={'REST-SECRET': self.config['API_SECRET']}, verify=False)
@@ -25,7 +25,9 @@ class Util:
             if not js['existing_members'] and not js['new_members'] and not js['left_members']:
                 message = 'No membership changes'
                 self.logger.info(message)
-                return None
+                if from_scheduler:
+                    return None
+                return message
             return 'Existing members added to roster: {}\nAccepted applicants: {}\nCharacters who left the corp: {}'.format(
                 ', '.join(js['existing_members'] or ('None', )),
                 ', '.join(js['new_members'] or ('None', )),
@@ -35,7 +37,7 @@ class Util:
             self.logger.error('Exception syncing membership: ' + str(e))
             return 'Error!'
 
-    def check_apps(self):
+    def check_apps(self, from_scheduler=False):
         """Makes an API request to the server to check applications
 
         Returns:
@@ -48,7 +50,9 @@ class Util:
             js = r.json()
             if js:
                 return 'New applications: ' + ', '.join(js)
-            return None
+            if from_scheduler:
+                return None
+            return 'No new applications'
         except Exception as e:
             self.logger.error('Exception in schedule_new_apps: ' + str(e))
             return 'Error!'
@@ -138,7 +142,7 @@ class Util:
         zkillDate = re.sub(r'[^0-9]', '', esiDate[:-4])
         return zkillDate
 
-    def check_killboard(self):
+    def check_killboard(self, from_scheduler=False):
         """Makes API calls to zKB to check killboard activity
 
         Returns:
@@ -148,8 +152,11 @@ class Util:
         noKillsList = []
         mains = self.get_database_mains()
         if not mains:
-            self.logger.warning('No mains in the database!')
-            return None
+            message = 'No mains in the database!'
+            self.logger.warning(message)
+            if from_scheduler:
+                return None
+            return message
 
         activity_whitelist = [e['NAME'] for e in self.config['ACTIVITY_WHITELIST']]
         for index, name in enumerate(mains):
@@ -222,8 +229,11 @@ class Util:
                 self.logger.info('{} has no kills, adding to list'.format(name))
                 noKillsList.append(name)
         if not noKillsList:
-            self.logger.info('All characters had recent kills')
-            return None
+            message = 'All characters had recent kills'
+            self.logger.info(message)
+            if from_scheduler:
+                return None
+            return message
 
         with open('config.json', 'w') as f:
             json.dump(self.config, f, indent=4)

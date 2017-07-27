@@ -15,19 +15,19 @@ class Scheduler(Thread):
 
     def check_apps(self):
         self.util.logger.info('Scheduler: check_apps()')
-        res = self.util.check_apps()
+        res = self.util.check_apps(from_scheduler=True)
         if res:
             self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], res)
 
     def sync(self):
         self.util.logger.info('Scheduler: sync()')
-        res = self.util.sync()
+        res = self.util.sync(from_scheduler=True)
         if res:
             self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], res)
 
     def killboard(self):
         self.util.logger.info('Scheduler: killboard()')
-        res = self.util.check_killboard()
+        res = self.util.check_killboard(from_scheduler=True)
         if res:
             self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], res)
 
