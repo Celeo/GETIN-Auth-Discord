@@ -10,7 +10,7 @@ from util import Util
 from scheduler import Scheduler
 
 
-__version__ = '2.0.2'
+__version__ = '2.0.3'
 
 with open('config.json') as f:
     config = json.load(f)
@@ -60,7 +60,7 @@ scheduler = Scheduler(
 def command_source(data):
     bot.send_message(
         data['d']['channel_id'],
-        'https://github.com/Celeo/GETIN-Auth-Discord by Celeo (EVE: Celeo Servasse) and WizBoom (EVE: Alex Kommorov)'
+        'https://github.com/EVE-GETIN/GETIN-Auth-Discord by Celeo (EVE: Celeo Servasse) and WizBoom (EVE: Alex Kommorov)'
     )
 
 
