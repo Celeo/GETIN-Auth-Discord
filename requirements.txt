@@ -1,9 +1,9 @@
-certifi==2017.4.17
+certifi==2017.7.27.1
 chardet==3.0.4
 idna==2.5
-PycordLib==1.2.1
-requests==2.18.1
+PycordLib==1.2.3
+requests==2.18.2
 schedule==0.4.3
 six==1.10.0
-urllib3==1.21.1
+urllib3==1.22
 websocket-client==0.44.0

@@ -2,6 +2,7 @@
 import json
 import logging
 import sys
+import time
 
 from pycord import Pycord
 
@@ -37,7 +38,8 @@ logger.addHandler(handler)
 bot = Pycord(
     config['TOKEN'],
     user_agent='GETIN-Auth-Discord (github.com/Celeo/GETIN-Auth-Discord, {__version__})',
-    logging_level=config['LOGGING']['LEVEL']['PYCORD']
+    logging_level=config['LOGGING']['LEVEL']['PYCORD'],
+    exit_on_websocket_close=True
 )
 util = Util(
     bot,
@@ -156,7 +158,11 @@ def command_help(data):
 
 logger.info('Connecting to the socket')
 bot.connect_to_websocket()
+while not bot.connected:
+    time.sleep(1)
 logger.info('Connected')
+time.sleep(5)
+bot.set_status('do !help')
 logger.info('Starting scheduled events')
 scheduler.run()
 logger.info('Started')
