@@ -10,7 +10,7 @@ from util import Util
 from scheduler import Scheduler
 
 
-__version__ = '2.0.5'
+__version__ = '2.0.6'
 
 with open('config.json') as f:
     config = json.load(f)
