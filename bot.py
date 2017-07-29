@@ -10,7 +10,7 @@ from util import Util
 from scheduler import Scheduler
 
 
-__version__ = '2.0.4'
+__version__ = '2.0.5'
 
 with open('config.json') as f:
     config = json.load(f)
@@ -38,8 +38,7 @@ logger.addHandler(handler)
 bot = Pycord(
     config['TOKEN'],
     user_agent='GETIN-Auth-Discord (github.com/Celeo/GETIN-Auth-Discord, {__version__})',
-    logging_level=config['LOGGING']['LEVEL']['PYCORD'],
-    exit_on_websocket_close=True
+    logging_level=config['LOGGING']['LEVEL']['PYCORD']
 )
 util = Util(
     bot,
