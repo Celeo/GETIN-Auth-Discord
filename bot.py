@@ -2,7 +2,7 @@
 import json
 import logging
 import sys
-# import time
+import time
 
 from pycord import Pycord
 
@@ -157,7 +157,10 @@ def command_help(data):
 
 logger.info('Connecting to the socket')
 bot.connect_to_websocket()
+while not bot.connected:
+    time.sleep(1)
 logger.info('Connected')
+time.sleep(3)
 bot.set_status('do !help')
 logger.info('Starting scheduled events')
 scheduler.run()
