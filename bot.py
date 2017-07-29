@@ -2,7 +2,7 @@
 import json
 import logging
 import sys
-import time
+# import time
 
 from pycord import Pycord
 
@@ -10,7 +10,7 @@ from util import Util
 from scheduler import Scheduler
 
 
-__version__ = '2.0.3'
+__version__ = '2.0.4'
 
 with open('config.json') as f:
     config = json.load(f)
@@ -158,11 +158,11 @@ def command_help(data):
 
 logger.info('Connecting to the socket')
 bot.connect_to_websocket()
-while not bot.connected:
-    time.sleep(1)
+# while not bot.connected:
+# time.sleep(1)
 logger.info('Connected')
-time.sleep(5)
-bot.set_status('do !help')
+# time.sleep(5)
+# bot.set_status('do !help')
 logger.info('Starting scheduled events')
 scheduler.run()
 logger.info('Started')
