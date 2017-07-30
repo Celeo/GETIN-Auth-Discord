@@ -29,7 +29,7 @@ class Scheduler(Thread):
         self.util.logger.info('Scheduler: killboard()')
         res = self.util.check_killboard(from_scheduler=True)
         if res:
-            self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], res)
+            self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['ACTIVITY'], res)
 
     def run(self):
         while True:
