@@ -138,6 +138,18 @@ def command_whitelist(data):
         logger.error('Exception in !whitelist: ' + str(e))
         bot.send_message(message_channel, 'An error occurred in the processing of that command')
 
+@bot.command('unwhitelist')
+def command_unwhitelist(data):
+    try:
+        message_channel = data['d']['channel_id']
+        if message_channel in config['PRIVATE_COMMAND_CHANNELS']['ACTIVITY_MODERATION']:
+            bot.send_message(message_channel, util.unwhitelist(data))
+        else:
+            bot.send_message(message_channel, WRONG_CHANNEL_MESSAGE)
+    except Exception as e:
+        logger.error('Exception in !whitelist: ' + str(e))
+        bot.send_message(message_channel, 'An error occurred in the processing of that command')
+
 
 @bot.command('help')
 def command_help(data):
@@ -151,6 +163,7 @@ def command_help(data):
   !unsubscribe     Unsubscribes from channels
   !help            Shows this message
   !whitelist       Whitelist a player for the killboard check
+  !unwhitelist     Remove a player from the killboard check whitelist
 ```'''
     bot.send_message(data['d']['channel_id'], message)
 

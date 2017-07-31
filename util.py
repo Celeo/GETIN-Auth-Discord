@@ -374,3 +374,24 @@ class Util:
             json.dump(self.config, f, indent=4)
 
         return return_string
+
+    def unwhitelist(self, data):
+        message = data['d']['content']
+        if len(message.split(' ')[1:]) == 0:
+            return "Please pass a character as an argument!"
+
+        args = message.split(' ', 1)[1].lower()
+        activity_whitelist = [e['NAME'].lower() for e in self.config['ACTIVITY_WHITELIST']]
+
+        if args not in activity_whitelist:
+            return "Character " + args + " not found!"
+
+        index = activity_whitelist.index(args.lower())
+        char = self.config['ACTIVITY_WHITELIST'][index]['NAME']
+        self.config['ACTIVITY_WHITELIST'].pop(index)
+        self.logger.info(char + ' has been removed from the whitelist!')
+
+        with open('config.json', 'w') as f:
+            json.dump(self.config, f, indent=4)
+
+        return char + ' has been removed from the whitelist!'
