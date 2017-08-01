@@ -448,36 +448,95 @@ class Util:
             #DO REDDIT QUERY
             data = self.reddit_query(argList[1])
             output = "\n".join(data)
-            return "https://www.reddit.com/u/" + self.reddit_account_query(argList[1]) + "\n```" + output + "```"
+            reddit = self.reddit_account_query(argList[1])
+            if reddit == "None":
+                return "Reddit not found!"
+
+            return "https://www.reddit.com/u/" + reddit + "\n```" + output + "```"
 
         elif queryKind == "char":
             #DO CHAR QUERY
             data = self.char_query(argList[1])
+            if not data:
+                return "Character not found!"
+
             output = ""
 
             #Main
             main = self.get_character_main(data[0][1])
             output += "MAIN: " + main + "\n"
 
+            #Alts
+            alts = self.get_database_alts_name(self.get_character_main(data[0][1]))
+            if alts:
+                alts.remove(main)
+            output += "ALTS: " + ", ".join(alts) + "\n" 
+
             #Corp
             corp = data[0][2]
             output += "CORP: " + corp + "\n"
 
-            #Alts
-            alts = self.get_database_alts_name(self.get_character_main(data[0][1]))
-            output += "ALTS: " + str(alts) + "\n" 
-
             #Reddit
             reddit = data[0][3]
-            output += "REDDIT: " + reddit + "\n"
+            if reddit is not None:
+                output += "REDDIT: " + reddit + "\n"
 
             #Brotags
+            bro = [["Good fits",data[0][4]],["Scanning",data[0][5]],["Mass & Time",data[0][6]],["Gank",data[0][7]],["PVE",data[0][8]],
+            ["Comms",data[0][9]],["Ships",data[0][10]],["Intel",data[0][11]],["PVP",data[0][12]],["Doctrine",data[0][13]]]
+
+            if corp == "Wormbro":
+                output += "BRO TAGS:\n"
+                #Checkmarks
+                for index in range(len(bro)):
+                    output += "\t" + bro[index][0] + " ["
+                    if bro[index][1] == 1:
+                        output += "x"
+                    else:
+                        output += " "
+                    output += "]\n"
+
+
 
             #Time in corp
+            charID = data[0][0]
+            if charID == None:
+                self.logger.warning("No character ID found for " + argList[1])
+                return "No character ID found for " + argList[1]
+
+            corpHistoryURL = 'https://esi.tech.ccp.is/latest/characters/' + str(charID) + '/corporationhistory/?datasource=tranquility'
+            corpHistory = requests.get(corpHistoryURL)
+            corpHistoryJSON = corpHistory.json()
+            if corp == "Wormbro":
+                for j in corpHistoryJSON:
+                    if j['corporation_id'] == self.WORMBRO_CORP_ID:
+                        datestr = j['start_date']
+                        date = datetime.strptime(datestr,"%Y-%m-%dT%H:%M:%SZ")
+                        now = datetime.now()
+                        delta = now - date
+                        output += "\nJoined Wormbro on " + str(date) + " (" + str(delta.days) + " days ago)\n"
+                        break
 
             #Last kill
+            request_url = 'https://zkillboard.com/api/characterID/' + charID + '/limit/1/'
+            self.logger.info('Making killboard request to {}'.format(request_url))
+            r = requests.get(request_url, headers={
+                'Accept-Encoding': 'gzip',
+                'User-Agent': 'Maintainer: ' + self.config['ZKILL_USER_AGENT']
+            })
+            if r.status_code != 200:
+                self.logger.error('Got status code {} from {}'.format(r.status_code, request_url))
+            zkill = r.json()
+            if not zkill:
+                output += "This character has never gotten a kill.\n"
+            else:
+                date = datetime.strptime(zkill[0]['killTime'],"%Y-%m-%d %H:%M:%S")
+                now = datetime.now()
+                delta = now - date
+                output +=  "Last kill on " + str(date) + " (" + str(delta.days) + " days ago)\n"
+                
 
-            return output
+            return "https://zkillboard.com/character/" + charID + "\n```" + output + "```"
         else:
             return "Argument type not found! Either use Reddit or Char"
 
@@ -494,6 +553,10 @@ class Util:
         cursor.execute('SELECT character_name FROM member WHERE LOWER(reddit) = LOWER(?) order by character_name asc',(reddit, ))
         data = cursor.fetchall()
         connection.close()
+        if len(data) == 0:
+            self.logger.error(reddit + " reddit account not found!")
+            return []
+
         return [e[0] for e in data]
 
     def reddit_account_query(self, reddit):
@@ -507,9 +570,11 @@ class Util:
         cursor.execute('SELECT DISTINCT reddit FROM member WHERE LOWER(reddit) = LOWER(?)',(reddit, ))
         data = cursor.fetchone()
         connection.close()
-        if len(data) == 0:
+
+        if data == None:
             self.logger.error(reddit + " reddit account not found!")
-            return reddit + " reddit account not found!"
+            return "None"
+
         return data[0]
 
     def char_query(self,character):
