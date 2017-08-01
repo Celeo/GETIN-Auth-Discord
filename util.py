@@ -272,7 +272,7 @@ class Util:
 
         noKillsList.sort()
         paste_contents = '\n'.join(noKillsList)
-        self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], '**' + datetime.utcnow().strftime('%Y-%m-%d %H:%M' + '**'))
+        self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['ACTIVITY'], '**' + datetime.utcnow().strftime('%Y-%m-%d %H:%M' + '**'))
 
         n = 1994
         # split the string
@@ -280,7 +280,7 @@ class Util:
         split_entry = ''
         for entry in paste_list:
             if len(split_entry + entry) >= n:
-                self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], '```' + split_entry + '```')
+                self.bot.send_message(self.config['PRIVATE_COMMAND_CHANNELS']['ACTIVITY'], '```' + split_entry + '```')
                 split_entry = ''
             else:
                 split_entry += entry + '\n'
