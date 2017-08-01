@@ -444,6 +444,7 @@ class Util:
             return 'Too many arguments!\n `!query TYPE|NAME`'
 
         queryKind = argList[0]
+        #What query command should it use
         if queryKind == "reddit":
             #DO REDDIT QUERY
             data = self.reddit_query(argList[1])
@@ -482,8 +483,8 @@ class Util:
                 output += "REDDIT: " + reddit + "\n"
 
             #Brotags
-            bro = [["Good fits",data[0][4]],["Scanning",data[0][5]],["Mass & Time",data[0][6]],["Gank",data[0][7]],["PVE",data[0][8]],
-            ["Comms",data[0][9]],["Ships",data[0][10]],["Intel",data[0][11]],["PVP",data[0][12]],["Doctrine",data[0][13]]]
+            bro = [["Good fits",data[0][4]],["Scanning",data[0][5]],["Mass & Time",data[0][6]],["Gank",data[0][7]],["PVE",data[0][8]], 
+            ["Comms",data[0][9]],["Ships",data[0][10]], ["Intel",data[0][11]],["PVP",data[0][12]],["Doctrine",data[0][13]]]
 
             if corp == "Wormbro":
                 output += "BRO TAGS:\n"
@@ -496,11 +497,9 @@ class Util:
                         output += " "
                     output += "]\n"
 
-
-
             #Time in corp
             charID = data[0][0]
-            if charID == None:
+            if charID is None:
                 self.logger.warning("No character ID found for " + argList[1])
                 return "No character ID found for " + argList[1]
 
@@ -530,19 +529,18 @@ class Util:
             if not zkill:
                 output += "This character has never gotten a kill.\n"
             else:
-                date = datetime.strptime(zkill[0]['killTime'],"%Y-%m-%d %H:%M:%S")
+                date = datetime.strptime(zkill[0]['killTime'], "%Y-%m-%d %H:%M:%S")
                 now = datetime.now()
                 delta = now - date
                 output +=  "Last kill on " + str(date) + " (" + str(delta.days) + " days ago)\n"
                 
-
             return "https://zkillboard.com/character/" + charID + "\n```" + output + "```"
         else:
             return "Argument type not found! Either use Reddit or Char"
 
         #return "TEST"
 
-    def reddit_query(self,reddit):
+    def reddit_query(self, reddit):
         """Get info from the database based on reddit name
 
         Returns:
@@ -577,7 +575,7 @@ class Util:
 
         return data[0]
 
-    def char_query(self,character):
+    def char_query(self, character):
         """Get info from the database based on character name
 
         Returns:

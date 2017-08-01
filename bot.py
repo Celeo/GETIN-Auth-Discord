@@ -138,6 +138,7 @@ def command_whitelist(data):
         logger.error('Exception in !whitelist: ' + str(e))
         bot.send_message(message_channel, 'An error occurred in the processing of that command')
 
+
 @bot.command('unwhitelist')
 def command_unwhitelist(data):
     try:
@@ -149,6 +150,7 @@ def command_unwhitelist(data):
     except Exception as e:
         logger.error('Exception in !unwhitelist: ' + str(e))
         bot.send_message(message_channel, 'An error occurred in the processing of that command')
+
 
 @bot.command('query')
 def command_query(data):
