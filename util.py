@@ -78,7 +78,7 @@ class Util:
         connection.close()
         return [e[0] for e in data]
 
-    def get_database_alts(self, main):
+    def get_database_alts_id(self, main):
         """Gets the main character's alts from the database
 
         Args:
@@ -90,6 +90,22 @@ class Util:
         connection = sqlite3.connect('../getin-auth/data.db')
         cursor = connection.cursor()
         cursor.execute('SELECT character_id FROM member WHERE main=? AND status = "Accepted" AND character_id != "NULL"', (main, ))
+        data = cursor.fetchall()
+        connection.close()
+        return [e[0] for e in data]
+
+    def get_database_alts_name(self, main):
+        """Gets the main character's alts from the database
+
+        Args:
+            main (str): main character name
+
+        Returns:
+            list: alt character names
+        """
+        connection = sqlite3.connect('../getin-auth/data.db')
+        cursor = connection.cursor()
+        cursor.execute('SELECT character_name FROM member WHERE main=? AND status = "Accepted" AND character_id != "NULL"', (main, ))
         data = cursor.fetchall()
         connection.close()
         return [e[0] for e in data]
@@ -129,6 +145,22 @@ class Util:
 
         connection.close()
         return entries
+
+    def get_character_main(self, character):
+        """Gets the main character from the database
+
+        Args:
+            main (str): main character name
+
+        Returns:
+            str: main character name
+        """
+        connection = sqlite3.connect('../getin-auth/data.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT main FROM member WHERE lower(character_name) = ?", (character.lower(), ))
+        data = cursor.fetchone()
+        connection.close()
+        return data[0]
 
     def convert_to_zkill_date(self, esiDate):
         """Converts EvE ESI date to EvE Zkillboard date
@@ -200,7 +232,7 @@ class Util:
                 self.logger.info(name + ' hasn\'t been in corp for a month! Continuing ...')
                 continue
 
-            alts = self.get_database_alts(name)
+            alts = self.get_database_alts_id(name)
             alts.sort(key=int)
             request_url = 'https://zkillboard.com/api/characterID/'
             found = False
@@ -395,3 +427,102 @@ class Util:
             json.dump(self.config, f, indent=4)
 
         return char + ' has been removed from the whitelist!'
+
+    def query(self, data):
+        argument_amount = 2
+        message = data['d']['content']
+        if len(message.split(' ')[1:]) == 0:
+            return "Please pass the correct arguments!\n `!query TYPE|NAME`"
+
+        args = message.split(' ', 1)[1].lower()
+        argList = args.split('|')
+
+        # check if there are enough arguments
+        if len(argList) < argument_amount:
+            return 'Too few arguments!\n `!query TYPE|NAME`'
+        elif len(argList) > argument_amount:
+            return 'Too many arguments!\n `!query TYPE|NAME`'
+
+        queryKind = argList[0]
+        if queryKind == "reddit":
+            #DO REDDIT QUERY
+            data = self.reddit_query(argList[1])
+            output = "\n".join(data)
+            return "https://www.reddit.com/u/" + self.reddit_account_query(argList[1]) + "\n```" + output + "```"
+
+        elif queryKind == "char":
+            #DO CHAR QUERY
+            data = self.char_query(argList[1])
+            output = ""
+
+            #Main
+            main = self.get_character_main(data[0][1])
+            output += "MAIN: " + main + "\n"
+
+            #Corp
+            corp = data[0][2]
+            output += "CORP: " + corp + "\n"
+
+            #Alts
+            alts = self.get_database_alts_name(self.get_character_main(data[0][1]))
+            output += "ALTS: " + str(alts) + "\n" 
+
+            #Reddit
+            reddit = data[0][3]
+            output += "REDDIT: " + reddit + "\n"
+
+            #Brotags
+
+            #Time in corp
+
+            #Last kill
+
+            return output
+        else:
+            return "Argument type not found! Either use Reddit or Char"
+
+        #return "TEST"
+
+    def reddit_query(self,reddit):
+        """Get info from the database based on reddit name
+
+        Returns:
+            list: character names
+        """
+        connection = sqlite3.connect('../getin-auth/data.db')
+        cursor = connection.cursor()
+        cursor.execute('SELECT character_name FROM member WHERE LOWER(reddit) = LOWER(?) order by character_name asc',(reddit, ))
+        data = cursor.fetchall()
+        connection.close()
+        return [e[0] for e in data]
+
+    def reddit_account_query(self, reddit):
+        """Get info from the database based on reddit name
+
+        Returns:
+            str: reddit name
+        """
+        connection = sqlite3.connect('../getin-auth/data.db')
+        cursor = connection.cursor()
+        cursor.execute('SELECT DISTINCT reddit FROM member WHERE LOWER(reddit) = LOWER(?)',(reddit, ))
+        data = cursor.fetchone()
+        connection.close()
+        if len(data) == 0:
+            self.logger.error(reddit + " reddit account not found!")
+            return reddit + " reddit account not found!"
+        return data[0]
+
+    def char_query(self,character):
+        """Get info from the database based on character name
+
+        Returns:
+            list: character info (character_id, character_name, corporation, reddit, know_good_fits, know_scan, know_mass, know_organize_gank,know_when_to_pve,know_comms,know_appropriate_ships,know_intel,know_pvp,know_doctrine)
+        """
+        connection = sqlite3.connect('../getin-auth/data.db')
+        cursor = connection.cursor()
+        cursor.execute(
+        'SELECT character_id,character_name,corporation,reddit,know_good_fits,know_scan,know_mass_and_time,know_organize_gank,know_when_to_pve,know_comms,know_appropriate_ships,know_intel,know_pvp,know_doctrine'
+        ' FROM member WHERE LOWER(character_name) = LOWER(?) order by character_name asc',(character, ))
+        data = cursor.fetchall()
+        connection.close()
+        return data
