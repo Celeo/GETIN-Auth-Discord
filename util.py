@@ -529,7 +529,7 @@ class Util:
             if not zkill:
                 output += "This character has never gotten a kill.\n"
             else:
-                date = datetime.strptime(zkill[0]['killTime'], "%Y-%m-%d %H:%M:%S")
+                date = datetime.strptime(zkill[0]['killmail_time'],"%Y-%m-%dT%H:%M:%SZ")
                 now = datetime.now()
                 delta = now - date
                 output +=  "Last kill on " + str(date) + " (" + str(delta.days) + " days ago)\n"
