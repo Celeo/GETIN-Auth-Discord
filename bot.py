@@ -81,7 +81,7 @@ def command_sync(data):
         bot.send_message(c, WRONG_CHANNEL_MESSAGE)
         return
     try:
-        bot.send_message('Syncing membership ...')
+        bot.send_message(c, 'Syncing membership ...')
         bot.send_message(c, util.sync())
     except Exception as e:
         logger.error('Exception in !sync: ' + str(e))
