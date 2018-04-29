@@ -21,9 +21,9 @@ class Scheduler(Thread):
 
     def sync(self):
         self.util.logger.info('Scheduler: sync()')
-        self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], 'Autosyncing membership ...')
         res = self.util.sync(from_scheduler=True)
-        self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], res if res else 'No change')
+        if res:
+            self.util.bot.send_message(self.util.config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT'], res)
 
     def killboard(self):
         self.util.logger.info('Scheduler: killboard()')
