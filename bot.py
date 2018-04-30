@@ -17,7 +17,6 @@ with open('config.json') as f:
 
 
 NEW_APPS_SLEEP_TIME = 900  # 15 minutes
-SYNC_SLEEP_TIME = 3600  # 1 hour
 KILLBOARD_SLEEP_TIME = 86400  # 1 day
 ACTIVITY_TIME_DAYS = 30  # (roughly) 1 month
 WORMBRO_CORP_ID = 98134538
@@ -50,7 +49,6 @@ util = Util(
 scheduler = Scheduler(
     util,
     NEW_APPS_SLEEP_TIME,
-    SYNC_SLEEP_TIME,
     KILLBOARD_SLEEP_TIME
 )
 
@@ -68,24 +66,9 @@ def command_schedule(data):
     message = f'''Schedule:
 #
 Check for new applications every {NEW_APPS_SLEEP_TIME // 60} minutes
-Sync membership every {SYNC_SLEEP_TIME // 60} minutes
 Check for killboard activity every {KILLBOARD_SLEEP_TIME // 3600} hours
 '''
     bot.send_message(data['d']['channel_id'], message)
-
-
-@bot.command('sync')
-def command_sync(data):
-    c = data['d']['channel_id']
-    if not c == config['PRIVATE_COMMAND_CHANNELS']['RECRUITMENT']:
-        bot.send_message(c, WRONG_CHANNEL_MESSAGE)
-        return
-    try:
-        bot.send_message(c, 'Syncing membership ...')
-        bot.send_message(c, util.sync())
-    except Exception as e:
-        logger.error('Exception in !sync: ' + str(e))
-        bot.send_message(c, 'An error occurred in the processing of that command')
 
 
 @bot.command('apps')
@@ -171,7 +154,6 @@ def command_help(data):
     message = '''```GETIN-Auth Discord bot
 
   !apps            Check apps
-  !sync            Member sync
   !source          Get bot source
   !schedule        Show update schedule
   !subscribe       Subscribes to certain channels

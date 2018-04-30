@@ -15,28 +15,6 @@ class Util:
         self.ACTIVITY_TIME_DAYS = ACTIVITY_TIME_DAYS
         self.WORMBRO_CORP_ID = WORMBRO_CORP_ID
 
-    def sync(self, from_scheduler=False):
-        """Makes an API request to the server to sync membership"""
-        try:
-            r = requests.get(self.config['URL_ROOT'] + 'sync', headers={'REST-SECRET': self.config['API_SECRET']}, verify=False)
-            if not r.status_code == 200:
-                raise Exception('Status code was {}, not 200'.format(r.status_code))
-            js = r.json()
-            if not js['existing_members'] and not js['new_members'] and not js['left_members']:
-                message = 'No membership changes'
-                self.logger.info(message)
-                if from_scheduler:
-                    return None
-                return message
-            return 'Existing members added to roster: {}\nAccepted applicants: {}\nCharacters who left the corp: {}'.format(
-                ', '.join(js['existing_members'] or ('None', )),
-                ', '.join(js['new_members'] or ('None', )),
-                ', '.join(js['left_members'] or ('None', ))
-            )
-        except Exception as e:
-            self.logger.error('Exception syncing membership: ' + str(e))
-            return 'Error!'
-
     def check_apps(self, from_scheduler=False):
         """Makes an API request to the server to check applications
 
@@ -471,7 +449,7 @@ class Util:
             alts = self.get_database_alts_name(self.get_character_main(data[0][1]))
             if alts:
                 alts.remove(main)
-            output += "ALTS: " + ", ".join(alts) + "\n" 
+            output += "ALTS: " + ", ".join(alts) + "\n"
 
             #Corp
             corp = data[0][2]
@@ -483,7 +461,7 @@ class Util:
                 output += "REDDIT: " + reddit + "\n"
 
             #Brotags
-            bro = [["Good fits",data[0][4]],["Scanning",data[0][5]],["Mass & Time",data[0][6]],["Gank",data[0][7]],["PVE",data[0][8]], 
+            bro = [["Good fits",data[0][4]],["Scanning",data[0][5]],["Mass & Time",data[0][6]],["Gank",data[0][7]],["PVE",data[0][8]],
             ["Comms",data[0][9]],["Ships",data[0][10]], ["Intel",data[0][11]],["PVP",data[0][12]],["Doctrine",data[0][13]]]
 
             if corp == "Wormbro":
@@ -533,7 +511,7 @@ class Util:
                 now = datetime.now()
                 delta = now - date
                 output +=  "Last kill on " + str(date) + " (" + str(delta.days) + " days ago)\n"
-                
+
             return "https://zkillboard.com/character/" + charID + "\n```" + output + "```"
         else:
             return "Argument type not found! Either use Reddit or Char"
